@@ -1,0 +1,174 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Regional/Neighborhood Quality Rankings</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* quick util class to toggle visibility */
+    .hidden {
+      display: none;
+    }
+    #sidebar select,
+    #sidebar input[type="text"] {
+      width: 100%;
+      padding: 0.3rem 0.4rem;
+      font-size: 0.9rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin: 0.25rem 0 0.75rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <div id="header">
+    <h1 class="title">Neighborhood Quality Rankings</h1>
+  </div>
+
+  <div id="sidebar">
+    <!-- Geography selector -->
+    <h2>Geography</h2>
+    <label class="toggle-label"><input type="radio" name="geography" value="county" checked /> <span>County</span></label><br />
+    <label class="toggle-label"><input type="radio" name="geography" value="metro" /> <span>Metro</span></label><br /><br />
+
+    <!-- County-level controls -->
+    <div id="county-options">
+      <h2>Source</h2>
+      <select id="source-select">
+        <option value="irs" selected>IRS</option>
+        <option value="dataaxle">DataAxle</option>
+      </select>
+
+      <h2>Year</h2>
+      <select id="year-select" name="year">
+        <option value="2023" selected>2023</option>
+        <option value="2022">2022</option>
+        <option value="2021">2021</option>
+        <option value="2020">2020</option>
+        <option value="2019">2019</option>
+        <option value="2018">2018</option>
+        <option value="2017">2017</option>
+        <option value="2016">2016</option>
+        <option value="2015">2015</option>
+        <option value="2014">2014</option>
+      </select>
+    </div>
+
+    <!-- Metro-level controls (hidden until Metro is chosen) -->
+    <div id="metro-options" class="hidden">
+      <h2>ACS Filter</h2>
+
+      <!-- choose one dimension to filter on -->
+      <label>Filter by
+        <select id="filter-type-select">
+          <option value="none" selected>-- choose --</option>
+          <option value="race">Race</option>
+          <option value="age">Age Group</option>
+          <option value="industry">Industry (2-digit NAICS)</option>
+        </select>
+      </label>
+
+      <!-- race selector -->
+      <label id="race-wrapper" class="hidden">Race
+        <select id="race-select">
+          <option value="black">Black</option>
+          <option value="white">White</option>
+        </select>
+      </label>
+
+      <!-- age selector -->
+      <label id="age-wrapper" class="hidden">Age Group
+        <select id="age-select">
+          <option value="25-35">25-35</option>
+          <option value="35-65">35-65</option>
+          <option value="65+">65+</option>
+        </select>
+      </label>
+
+      <!-- industry selector -->
+      <label id="industry-wrapper" class="hidden">Industry (2-digit NAICS)
+        <input type="text" id="industry-input" placeholder="e.g. 23" maxlength="2" />
+      </label>
+    </div>
+
+    <h2>Download</h2>
+    <button id="download">Download Current Layer</button>
+  </div>
+
+  <div class="legend" id="legend">
+    <strong>Page Rank</strong>
+    <div class="color-bar">
+      <div class="stop" style="background:#08306b"></div>
+      <div class="stop" style="background:#2171b5"></div>
+      <div class="stop" style="background:#6baed6"></div>
+      <div class="stop" style="background:#bdd7e7"></div>
+      <div class="stop" style="background:#eff3ff"></div>
+      <div class="stop" style="background:#fee0d2"></div>
+      <div class="stop" style="background:#fc9272"></div>
+      <div class="stop" style="background:#de2d26"></div>
+      <div class="stop" style="background:#a50f15"></div>
+    </div>
+    <div class="labels">
+      <span>Low</span>
+      <span>High</span>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    /* ============================================================
+       Sidebar UI logic — show/hide controls based on geography
+    ============================================================ */
+    const countyOptions = document.getElementById('county-options');
+    const metroOptions  = document.getElementById('metro-options');
+
+    document.querySelectorAll('input[name="geography"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        if (radio.checked && radio.value === 'county') {
+          countyOptions.classList.remove('hidden');
+          metroOptions.classList.add('hidden');
+        }
+        if (radio.checked && radio.value === 'metro') {
+          metroOptions.classList.remove('hidden');
+          countyOptions.classList.add('hidden');
+        }
+      });
+    });
+
+    /* ============================================================
+       Metro ACS filter logic — user can pick only one dimension
+    ============================================================ */
+    const filterTypeSelect  = document.getElementById('filter-type-select');
+    const raceWrapper       = document.getElementById('race-wrapper');
+    const ageWrapper        = document.getElementById('age-wrapper');
+    const industryWrapper   = document.getElementById('industry-wrapper');
+
+    filterTypeSelect.addEventListener('change', () => {
+      const val = filterTypeSelect.value;
+      raceWrapper.classList.toggle('hidden',     val !== 'race');
+      ageWrapper.classList.toggle('hidden',      val !== 'age');
+      industryWrapper.classList.toggle('hidden', val !== 'industry');
+    });
+
+    /* ------------------------------------------------------------
+       TODO: Hook these selectors into your map-loading logic
+       Example use:
+         if (geography === 'metro') {
+           const filters = {}
+           switch (filterTypeSelect.value) {
+             case 'race':     filters.race = document.getElementById('race-select').value; break;
+             case 'age':      filters.age  = document.getElementById('age-select').value;  break;
+             case 'industry': filters.naics= document.getElementById('industry-input').value; break;
+           }
+           loadMetroLayer(filters);
+         }
+    ------------------------------------------------------------ */
+  </script>
+  <!-- Your custom map logic -->
+  <script src="script.js"></script>
+</body>
+</html>
