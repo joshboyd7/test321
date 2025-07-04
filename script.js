@@ -7,7 +7,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 // CHANGE THIS
-const GITHUB_RAW_BASE = "https://raw.githubusercontent.com/your-username/insurance-map-data/main/data";
+const GITHUB_RAW_BASE = "https://raw.githubusercontent.com/joshboyd7/test321/main/data";
 
 function getGeoJSONUrl(layer, year) {
   return `${GITHUB_RAW_BASE}/${layer}_${year}.geojson`;
