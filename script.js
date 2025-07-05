@@ -38,11 +38,12 @@ function loadLayer(layer, year, column) {
 function updateMap(layer, year, column) {
   const filtered = {
     ...fullGeojsonData,
-    features: fullGeojsonData.features.filter(f =>
-      f.properties.layer === layer &&
-      f.properties.year === parseInt(year) &&
-      f.properties[column] != null
-    )
+    features: fullGeojsonData.features.filter(f => {
+      const matchesLayer = f.properties.layer === layer;
+      const matchesColumn = f.properties[column] != null;
+      const matchesYear = (layer === "metro") ? true : f.properties.year === parseInt(year);
+      return matchesLayer && matchesYear && matchesColumn;
+    })
   };
 
   if (filtered.features.length === 0) {
