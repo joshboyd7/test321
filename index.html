@@ -1,77 +1,124 @@
-<div id="sidebar">
-  <!-- Geography selector -->
-  <h2>Geography</h2>
-  <label class="toggle-label"><input type="radio" name="layer" value="county" /> <span>County</span></label><br />
-  <label class="toggle-label"><input type="radio" name="layer" value="metro" checked /> <span>Metro</span></label><br /><br />
 
-  <!-- County-level controls -->
-  <div id="county-options" class="hidden">
-    <h2>Source</h2>
-    <select id="source-select">
-      <option value="irs" selected>IRS</option>
-      <option value="dataaxle">DataAxle</option>
-    </select>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Regional/Neighborhood Quality Rankings</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* quick util class to toggle visibility */
+    .hidden {
+      display: none;
+    }
+    #sidebar select,
+    #sidebar input[type="text"] {
+      width: 100%;
+      padding: 0.3rem 0.4rem;
+      font-size: 0.9rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin: 0.25rem 0 0.75rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
 
-    <h2>Year</h2>
-    <select id="year-select" name="year">
-      <option value="2023" selected>2023</option>
-      <option value="2022">2022</option>
-      <option value="2021">2021</option>
-      <option value="2020">2020</option>
-      <option value="2019">2019</option>
-      <option value="2018">2018</option>
-      <option value="2017">2017</option>
-      <option value="2016">2016</option>
-      <option value="2015">2015</option>
-      <option value="2014">2014</option>
-    </select>
+  <div id="header">
+    <h1 class="title">Neighborhood Quality Rankings</h1>
   </div>
 
-  <!-- Metro-level controls -->
-  <div id="metro-options">
-    <h2>PageRank Metric</h2>
-    <select id="column-select">
-      <option value="total" selected>Total</option>
-      <option value="race_Black">Black</option>
-      <option value="race_White">White</option>
-      <option value="age_25_35">Age 25–35</option>
-      <option value="age_35_65">Age 35–65</option>
-      <option value="age_65plus">Age 65+</option>
-      <option value="industry_23">Construction (NAICS 23)</option>
-    </select>
+  <div id="sidebar">
+    <!-- Geography selector -->
+    <h2>Geography</h2>
+    <label class="toggle-label"><input type="radio" name="geography" value="county" checked /> <span>County</span></label><br />
+    <label class="toggle-label"><input type="radio" name="geography" value="metro" /> <span>Metro</span></label><br /><br />
 
-    <h2>ACS Filter</h2>
-    <label>Filter by
-      <select id="filter-type-select">
-        <option value="none" selected>-- choose --</option>
-        <option value="race">Race</option>
-        <option value="age">Age Group</option>
-        <option value="industry">Industry (2-digit NAICS)</option>
+    <!-- County-level controls -->
+    <div id="county-options">
+      <h2>Source</h2>
+      <select id="source-select">
+        <option value="irs" selected>IRS</option>
+        <option value="dataaxle">DataAxle</option>
       </select>
-    </label>
 
-    <label id="race-wrapper" class="hidden">Race
-      <select id="race-select">
-        <option value="black">Black</option>
-        <option value="white">White</option>
+      <h2>Year</h2>
+      <select id="year-select" name="year">
+        <option value="2023" selected>2023</option>
+        <option value="2022">2022</option>
+        <option value="2021">2021</option>
+        <option value="2020">2020</option>
+        <option value="2019">2019</option>
+        <option value="2018">2018</option>
+        <option value="2017">2017</option>
+        <option value="2016">2016</option>
+        <option value="2015">2015</option>
+        <option value="2014">2014</option>
       </select>
-    </label>
+    </div>
 
-    <label id="age-wrapper" class="hidden">Age Group
-      <select id="age-select">
-        <option value="25-35">25-35</option>
-        <option value="35-65">35-65</option>
-        <option value="65+">65+</option>
-      </select>
-    </label>
+    <!-- Metro-level controls (hidden until Metro is chosen) -->
+    <div id="metro-options" class="hidden">
+      <h2>ACS Filter</h2>
 
-    <label id="industry-wrapper" class="hidden">Industry (2-digit NAICS)
-      <input type="text" id="industry-input" placeholder="e.g. 23" maxlength="2" />
-    </label>
+      <!-- choose one dimension to filter on -->
+      <label>Filter by
+        <select id="filter-type-select">
+          <option value="none" selected>-- choose --</option>
+          <option value="race">Race</option>
+          <option value="age">Age Group</option>
+          <option value="industry">Industry (2-digit NAICS)</option>
+        </select>
+      </label>
+
+      <!-- race selector -->
+      <label id="race-wrapper" class="hidden">Race
+        <select id="race-select">
+          <option value="black">Black</option>
+          <option value="white">White</option>
+        </select>
+      </label>
+
+      <!-- age selector -->
+      <label id="age-wrapper" class="hidden">Age Group
+        <select id="age-select">
+          <option value="25-35">25-35</option>
+          <option value="35-65">35-65</option>
+          <option value="65+">65+</option>
+        </select>
+      </label>
+
+      <!-- industry selector -->
+      <label id="industry-wrapper" class="hidden">Industry (2-digit NAICS)
+        <input type="text" id="industry-input" placeholder="e.g. 23" maxlength="2" />
+      </label>
+    </div>
+
+    <h2>Download</h2>
+    <button id="download">Download Current Layer</button>
   </div>
 
-  <h2>Download</h2>
-  <button id="download">Download Current Layer</button>
-</div>
+  <div class="legend" id="legend">
+    <strong>Page Rank</strong>
+    <div class="color-bar">
+      <div class="stop" style="background:#08306b"></div>
+      <div class="stop" style="background:#2171b5"></div>
+      <div class="stop" style="background:#6baed6"></div>
+      <div class="stop" style="background:#bdd7e7"></div>
+      <div class="stop" style="background:#eff3ff"></div>
+      <div class="stop" style="background:#fee0d2"></div>
+      <div class="stop" style="background:#fc9272"></div>
+      <div class="stop" style="background:#de2d26"></div>
+      <div class="stop" style="background:#a50f15"></div>
+    </div>
+    <div class="labels">
+      <span>Low</span>
+      <span>High</span>
+    </div>
+  </div>
 
-
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
