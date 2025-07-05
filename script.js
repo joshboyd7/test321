@@ -1,9 +1,6 @@
-
-
-// script.js
 let map = L.map("map").setView([37.8, -96], 4);
 let geoLayer;
-let currentYear = "2024";
+let currentYear = "2023";
 let currentLayer = "county";
 
 // Basemap
@@ -23,8 +20,11 @@ function getColor(d) {
          d > 1660.116 ? '#bdd7e7' :
          d > 1536.735 ? '#6baed6' :
          d > 1407.501 ? '#2171b5' :
-                        '#08306b';
+                        '#08306b';   // lowest value
 }
+
+
+
 
 // Load data
 function loadLayer(year, layerType) {
