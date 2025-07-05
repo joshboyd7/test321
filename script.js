@@ -1,4 +1,3 @@
-
 const map = L.map('map').setView([37.8, -96], 4);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -8,24 +7,43 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 // CHANGE THIS
 const GITHUB_RAW_BASE = "https://raw.githubusercontent.com/joshboyd7/test321/main/data";
+const COMBINED_GEOJSON_URL = `${GITHUB_RAW_BASE}/combined_pagerank.geojson`;
+const COMBINED_CSV_URL = `${GITHUB_RAW_BASE}/combined_pagerank.csv`;
 
-function getGeoJSONUrl(layer, year) {
-  return `${GITHUB_RAW_BASE}/${layer}_${year}.geojson`;
+let fullGeojsonData = null;
+
+function filterGeoJSON(data, layer, year) {
+  return {
+    ...data,
+    features: data.features.filter(f =>
+      f.properties.layer === layer && f.properties.year === parseInt(year)
+    )
+  };
 }
 
 function loadLayer(layer, year) {
-  const url = getGeoJSONUrl(layer, year);
-  fetch(url)
-    .then(res => res.json())
-    .then(geojson => {
-      if (window.currentLayer) map.removeLayer(window.currentLayer);
-      window.currentLayer = L.geoJSON(geojson, {
-        style: feature => ({ color: "#2171b5", weight: 1, fillOpacity: 0.7 })
-      }).addTo(map);
-    })
-    .catch(err => console.error("Failed to load layer:", err));
+  if (!fullGeojsonData) {
+    fetch(COMBINED_GEOJSON_URL)
+      .then(res => res.json())
+      .then(data => {
+        fullGeojsonData = data;
+        updateMap(layer, year);
+      })
+      .catch(err => console.error("Failed to load combined GeoJSON:", err));
+  } else {
+    updateMap(layer, year);
+  }
 }
 
+function updateMap(layer, year) {
+  const filtered = filterGeoJSON(fullGeojsonData, layer, year);
+  if (window.currentLayer) map.removeLayer(window.currentLayer);
+  window.currentLayer = L.geoJSON(filtered, {
+    style: feature => ({ color: "#2171b5", weight: 1, fillOpacity: 0.7 })
+  }).addTo(map);
+}
+
+// Initial load
 loadLayer("county", "2023");
 
 document.getElementById('year-select').addEventListener('change', e => {
@@ -43,36 +61,10 @@ document.querySelectorAll('input[name="layer"]').forEach(radio => {
 });
 
 document.getElementById('download').addEventListener('click', () => {
-  const geography = document.querySelector('input[name="geography"]:checked').value;
-
-  let filename = null;
-
-  if (geography === "county") {
-    const source = document.getElementById('source-select').value;
-    const year = document.getElementById('year-select').value;
-    filename = `${source}_${year}.csv`;
-  } else if (geography === "metro") {
-    const filterType = document.getElementById('filter-type-select').value;
-
-    if (filterType === "none") {
-      filename = `total.csv`;
-    } else if (filterType === "race") {
-      const race = document.getElementById('race-select').value;
-      filename = `race_${race}.csv`;
-    } else if (filterType === "age") {
-      const age = document.getElementById('age-select').value.replace("+", "plus").replace("-", "_");
-      filename = `age_${age}.csv`;
-    } else if (filterType === "industry") {
-      const naics = document.getElementById('industry-input').value;
-      filename = `industry_${naics}.csv`;
-    }
-  }
-
-  if (filename) {
-    const csvUrl = `${GITHUB_RAW_BASE}/geojson_export/${filename}`;
-    const link = document.createElement('a');
-    link.href = csvUrl;
-    link.download = filename;
-    link.click();
-  }
+  // Optional: Add filtering logic here if needed to let users download filtered CSVs
+  const link = document.createElement('a');
+  link.href = COMBINED_CSV_URL;
+  link.download = 'combined_pagerank.csv';
+  link.click();
 });
+
