@@ -1,4 +1,5 @@
 
+
 let map = L.map("map").setView([37.8, -96], 4);
 let geoLayer;
 
@@ -14,6 +15,35 @@ function getColor(d) {
          d > 0.001 ? '#fc9272' :
          d > 0 ? '#fee0d2' :
                  '#f7fbff';
+}
+
+// Determine which column to use based on UI
+function getSelectedColumn() {
+  const geography = document.querySelector('input[name="geography"]:checked')?.value;
+
+  if (geography === "metro") {
+    const filterType = document.getElementById("filter-type-select").value;
+
+    if (filterType === "race") {
+      const race = document.getElementById("race-select").value;
+      return `race_${race}`;
+    }
+
+    if (filterType === "age") {
+      const age = document.getElementById("age-select").value.replace("+", "plus").replace("-", "_");
+      return `age_${age}`;
+    }
+
+    if (filterType === "industry") {
+      const naics = document.getElementById("industry-input").value;
+      return `industry_${naics}`;
+    }
+
+    return "total_flowHH"; // default fallback
+  }
+
+  // Default for county (until more logic is added)
+  return "total_flowHH";
 }
 
 // Load and draw layer
@@ -65,15 +95,23 @@ function loadLayer(column) {
     });
 }
 
-// Initial load
-const defaultColumn = document.getElementById("column-select")?.value || "total_flowPER";
-loadLayer(defaultColumn);
-
-// Change column when dropdown updates
-document.getElementById("column-select").addEventListener("change", () => {
-  const column = document.getElementById("column-select").value;
+// Redraw when any UI input changes
+function refreshMap() {
+  const column = getSelectedColumn();
   loadLayer(column);
+}
+
+// Initial load
+refreshMap();
+
+// Hook up UI events
+document.querySelectorAll('input[name="geography"]').forEach(input => {
+  input.addEventListener("change", refreshMap);
 });
+document.getElementById("filter-type-select").addEventListener("change", refreshMap);
+document.getElementById("race-select").addEventListener("change", refreshMap);
+document.getElementById("age-select").addEventListener("change", refreshMap);
+document.getElementById("industry-input").addEventListener("input", refreshMap);
 
 // Download button (assumes matching CSV exists)
 document.getElementById("download").addEventListener("click", () => {
@@ -82,4 +120,3 @@ document.getElementById("download").addEventListener("click", () => {
   a.download = "combined_pagerank.csv";
   a.click();
 });
-
