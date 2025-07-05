@@ -1,85 +1,31 @@
-let map = L.map("map").setView([37.8, -96], 4);
-let geoLayer;
-let currentYear = "2023";
-let currentLayer = "county";
 
-// Basemap
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  attribution: "Map data © OpenStreetMap contributors"
+const map = L.map('map').setView([37.8, -96], 4);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-// Color scale
-function getColor(d) {
-  if (d == null || isNaN(d)) return '#cccccc'; // no data = gray
+let countyLayer = L.geoJson(null, {
+  style: { color: '#de2d26', weight: 1, fillOpacity: 0.6 }
+}).addTo(map);
 
-  return d > 9411.148 ? '#a50f15' :
-         d > 2511.106 ? '#de2d26' :
-         d > 2168.236 ? '#fc9272' :
-         d > 1952.638 ? '#fee0d2' :
-         d > 1792.199 ? '#eff3ff' :
-         d > 1660.116 ? '#bdd7e7' :
-         d > 1536.735 ? '#6baed6' :
-         d > 1407.501 ? '#2171b5' :
-                        '#08306b';   // lowest value
-}
-
-
-
-
-// Load data
-function loadLayer(year, layerType) {
-  const filePath = `data/${year}-${layerType}.json`;
-
-  fetch(filePath)
-    .then(res => res.json())
-    .then(data => {
-      if (geoLayer) map.removeLayer(geoLayer);
-
-      geoLayer = L.geoJSON(data, {
-        style: feature => ({
-          fillColor: getColor(feature.properties.value),
-          weight: 1,
-          opacity: 1,
-          color: 'white',
-          dashArray: '3',
-          fillOpacity: 0.8
-        }),
-        onEachFeature: (feature, layer) => {
-          const name = feature.properties.NAME || feature.properties.name || "";
-          const val = feature.properties.value != null ? feature.properties.value.toLocaleString() : "N/A";
-          layer.bindPopup(`${name}: $${val}`);
-        }
-      }).addTo(map);
-
-      map.fitBounds(geoLayer.getBounds());
-    })
-    .catch(err => {
-      console.error("Error loading data:", err);
-    });
-}
-
-// Initial load
-loadLayer(currentYear, currentLayer);
-
-// Year dropdown
-document.getElementById("year-select").addEventListener("change", e => {
-  currentYear = e.target.value;
-  loadLayer(currentYear, currentLayer);
+let stateLayer = L.geoJson(null, {
+  style: { color: '#3182bd', weight: 1, fillOpacity: 0.6 }
 });
 
-// Layer toggle (county/state)
 document.querySelectorAll('input[name="layer"]').forEach(input => {
-  input.addEventListener("change", e => {
-    currentLayer = e.target.value;
-    loadLayer(currentYear, currentLayer);
+  input.addEventListener('change', function () {
+    if (this.value === 'county') {
+      map.removeLayer(stateLayer);
+      map.addLayer(countyLayer);
+    } else {
+      map.removeLayer(countyLayer);
+      map.addLayer(stateLayer);
+    }
   });
 });
 
-// Download button
-document.getElementById("download").addEventListener("click", () => {
-  const url = `data/${currentYear}-${currentLayer}.json`;
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${currentYear}-${currentLayer}.json`;
-  a.click();
+document.getElementById('download').addEventListener('click', function () {
+  const layer = document.querySelector('input[name="layer"]:checked').value;
+  alert(`Downloading data for ${layer}`);
 });
