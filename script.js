@@ -5,66 +5,102 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-// CHANGE THIS
+// File locations
 const GITHUB_RAW_BASE = "https://raw.githubusercontent.com/joshboyd7/test321/main/data";
 const COMBINED_GEOJSON_URL = `${GITHUB_RAW_BASE}/combined_pagerank.geojson`;
 const COMBINED_CSV_URL = `${GITHUB_RAW_BASE}/combined_pagerank.csv`;
 
 let fullGeojsonData = null;
 
-function filterGeoJSON(data, layer, year) {
-  return {
-    ...data,
-    features: data.features.filter(f =>
-      f.properties.layer === layer && f.properties.year === parseInt(year)
-    )
-  };
+function getColorScale(value) {
+  if (value == null) return '#ccc';
+  return value > 0.01 ? '#08306b' :
+         value > 0.005 ? '#2171b5' :
+         value > 0.001 ? '#6baed6' :
+         value > 0 ? '#c6dbef' :
+                     '#f7fbff';
 }
 
-function loadLayer(layer, year) {
+function loadLayer(layer, year, column) {
   if (!fullGeojsonData) {
     fetch(COMBINED_GEOJSON_URL)
       .then(res => res.json())
       .then(data => {
         fullGeojsonData = data;
-        updateMap(layer, year);
+        updateMap(layer, year, column);
       })
       .catch(err => console.error("Failed to load combined GeoJSON:", err));
   } else {
-    updateMap(layer, year);
+    updateMap(layer, year, column);
   }
 }
 
-function updateMap(layer, year) {
-  const filtered = filterGeoJSON(fullGeojsonData, layer, year);
+function updateMap(layer, year, column) {
+  const filtered = {
+    ...fullGeojsonData,
+    features: fullGeojsonData.features.filter(f =>
+      f.properties.layer === layer &&
+      f.properties.year === parseInt(year) &&
+      f.properties[column] != null
+    )
+  };
+
+  if (filtered.features.length === 0) {
+    console.warn(`No data for layer=${layer}, year=${year}, column=${column}`);
+    return;
+  }
+
   if (window.currentLayer) map.removeLayer(window.currentLayer);
+
   window.currentLayer = L.geoJSON(filtered, {
-    style: feature => ({ color: "#2171b5", weight: 1, fillOpacity: 0.7 })
+    style: feature => ({
+      color: "#555",
+      weight: 1,
+      fillOpacity: 0.7,
+      fillColor: getColorScale(feature.properties[column])
+    }),
+    onEachFeature: (feature, layer) => {
+      const val = feature.properties[column];
+      const name = feature.properties.name || feature.properties.id;
+      layer.bindPopup(`<strong>${name}</strong><br>${column}: ${val != null ? val.toFixed(5) : "N/A"}`);
+    }
   }).addTo(map);
 }
 
-// Initial load
-loadLayer("county", "2023");
+function getCurrentParams() {
+  const year = document.getElementById('year-select').value;
+  const layer = document.querySelector('input[name="layer"]:checked').value;
+  const column = document.getElementById('column-select').value;
+  return { layer, year, column };
+}
 
-document.getElementById('year-select').addEventListener('change', e => {
-  const year = e.target.value;
-  const layer = document.querySelector('input[name="layer"]')?.value || "county";
-  loadLayer(layer, year);
+document.getElementById('year-select').addEventListener('change', () => {
+  const { layer, year, column } = getCurrentParams();
+  loadLayer(layer, year, column);
 });
 
 document.querySelectorAll('input[name="layer"]').forEach(radio => {
-  radio.addEventListener('change', e => {
-    const layer = e.target.value;
-    const year = document.getElementById('year-select').value;
-    loadLayer(layer, year);
+  radio.addEventListener('change', () => {
+    const { layer, year, column } = getCurrentParams();
+    loadLayer(layer, year, column);
   });
 });
 
+document.getElementById('column-select').addEventListener('change', () => {
+  const { layer, year, column } = getCurrentParams();
+  loadLayer(layer, year, column);
+});
+
 document.getElementById('download').addEventListener('click', () => {
-  // Optional: Add filtering logic here if needed to let users download filtered CSVs
   const link = document.createElement('a');
   link.href = COMBINED_CSV_URL;
   link.download = 'combined_pagerank.csv';
   link.click();
 });
 
+// Initial load — use 'metro' even if user has 'county' selected
+window.addEventListener('load', () => {
+  const column = document.getElementById('column-select').value;
+  const year = document.getElementById('year-select').value;
+  loadLayer('metro', year, column);
+});
