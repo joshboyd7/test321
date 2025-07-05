@@ -1,7 +1,6 @@
+
 let map = L.map("map").setView([37.8, -96], 4);
 let geoLayer;
-let currentYear = "2023";
-let currentLayer = "county";
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "Map data © OpenStreetMap contributors"
@@ -9,21 +8,17 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 
 // Color scale
 function getColor(d) {
-  if (d == null || isNaN(d)) return '#cccccc';
-  return d > 9411.148 ? '#a50f15' :
-         d > 2511.106 ? '#de2d26' :
-         d > 2168.236 ? '#fc9272' :
-         d > 1952.638 ? '#fee0d2' :
-         d > 1792.199 ? '#eff3ff' :
-         d > 1660.116 ? '#bdd7e7' :
-         d > 1536.735 ? '#6baed6' :
-         d > 1407.501 ? '#2171b5' :
-                        '#08306b';
+  if (d == null || isNaN(d)) return '#cccccc'; // fallback for missing values
+  return d > 0.01 ? '#a50f15' :
+         d > 0.005 ? '#de2d26' :
+         d > 0.001 ? '#fc9272' :
+         d > 0 ? '#fee0d2' :
+                 '#f7fbff';
 }
 
-// Main load function
-function loadLayer(year, geography) {
-  const filePath = "data/combined.json";
+// Load and draw layer
+function loadLayer(column) {
+  const filePath = "data/combined_pagerank.geojson";
 
   fetch(filePath)
     .then(res => res.json())
@@ -33,33 +28,15 @@ function loadLayer(year, geography) {
         return;
       }
 
-      let filtered = data.features.filter(f =>
-        f.properties &&
-        f.properties.geography === geography &&
-        (geography === "county" ? f.properties.year == year : true)
+      const filtered = data.features.filter(f =>
+        f.properties && f.properties[column] != null
       );
-
-      // For metro, apply ACS subgroup filters
-      if (geography === "metro") {
-        const filterType = document.getElementById("filter-type-select").value;
-
-        if (filterType === "race") {
-          const race = document.getElementById("race-select").value;
-          filtered = filtered.filter(f => f.properties.race === race);
-        } else if (filterType === "age") {
-          const age = document.getElementById("age-select").value;
-          filtered = filtered.filter(f => f.properties.age_group === age);
-        } else if (filterType === "industry") {
-          const naics = document.getElementById("industry-input").value;
-          filtered = filtered.filter(f => f.properties.naics_2 === naics);
-        }
-      }
 
       if (geoLayer) map.removeLayer(geoLayer);
 
       geoLayer = L.geoJSON({ type: "FeatureCollection", features: filtered }, {
         style: feature => ({
-          fillColor: getColor(feature.properties.value),
+          fillColor: getColor(feature.properties[column]),
           weight: 1,
           opacity: 1,
           color: 'white',
@@ -67,9 +44,9 @@ function loadLayer(year, geography) {
           fillOpacity: 0.8
         }),
         onEachFeature: (feature, layer) => {
-          const name = feature.properties.NAME || feature.properties.name || "";
-          const val = feature.properties.value != null ? feature.properties.value.toLocaleString() : "N/A";
-          layer.bindPopup(`${name}: $${val}`);
+          const name = feature.properties.NAME || feature.properties.name || feature.properties.metro_name || "Unnamed";
+          const val = feature.properties[column];
+          layer.bindPopup(`${name}<br><strong>${column}</strong>: ${val != null ? val.toFixed(5) : "N/A"}`);
         }
       }).addTo(map);
 
@@ -79,58 +56,30 @@ function loadLayer(year, geography) {
         } catch (e) {
           console.warn("Could not fit map bounds:", e);
         }
+      } else {
+        console.warn(`No data found for column "${column}".`);
       }
     })
     .catch(err => {
-      console.error("Failed to load combined.json:", err);
+      console.error("Failed to load GeoJSON file:", err);
     });
 }
 
 // Initial load
-loadLayer(currentYear, currentLayer);
+const defaultColumn = document.getElementById("column-select")?.value || "total_flowPER";
+loadLayer(defaultColumn);
 
-// Controls
-document.getElementById("year-select").addEventListener("change", e => {
-  currentYear = e.target.value;
-  if (currentLayer === "county") {
-    loadLayer(currentYear, currentLayer);
-  }
-});
-
-document.querySelectorAll('input[name="geography"]').forEach(input => {
-  input.addEventListener("change", e => {
-    currentLayer = e.target.value;
-    loadLayer(currentYear, currentLayer);
-  });
+// Change column when dropdown updates
+document.getElementById("column-select").addEventListener("change", () => {
+  const column = document.getElementById("column-select").value;
+  loadLayer(column);
 });
 
-document.getElementById("filter-type-select").addEventListener("change", () => {
-  if (currentLayer === "metro") {
-    loadLayer(currentYear, currentLayer);
-  }
-});
-document.getElementById("race-select").addEventListener("change", () => {
-  if (currentLayer === "metro") {
-    loadLayer(currentYear, currentLayer);
-  }
-});
-document.getElementById("age-select").addEventListener("change", () => {
-  if (currentLayer === "metro") {
-    loadLayer(currentYear, currentLayer);
-  }
-});
-document.getElementById("industry-input").addEventListener("input", () => {
-  if (currentLayer === "metro") {
-    loadLayer(currentYear, currentLayer);
-  }
-});
-
-// Download button
+// Download button (assumes matching CSV exists)
 document.getElementById("download").addEventListener("click", () => {
-  const url = `data/combined.csv`;
   const a = document.createElement("a");
-  a.href = url;
-  a.download = `combined.csv`;
+  a.href = "data/combined_pagerank.csv";
+  a.download = "combined_pagerank.csv";
   a.click();
 });
 
