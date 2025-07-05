@@ -1,31 +1,97 @@
+let map = L.map("map").setView([37.8, -96], 4);
+let geoLayer;
+let currentYear = "2024";
+let currentLayer = "county";
 
-const map = L.map('map').setView([37.8, -96], 4);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap contributors'
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  attribution: "Map data © OpenStreetMap contributors"
 }).addTo(map);
 
-let countyLayer = L.geoJson(null, {
-  style: { color: '#de2d26', weight: 1, fillOpacity: 0.6 }
-}).addTo(map);
+// Color scale
+function getColor(d) {
+  if (d == null || isNaN(d)) return '#cccccc'; // fallback color for missing
+  return d > 9411.148 ? '#a50f15' :
+         d > 2511.106 ? '#de2d26' :
+         d > 2168.236 ? '#fc9272' :
+         d > 1952.638 ? '#fee0d2' :
+         d > 1792.199 ? '#eff3ff' :
+         d > 1660.116 ? '#bdd7e7' :
+         d > 1536.735 ? '#6baed6' :
+         d > 1407.501 ? '#2171b5' :
+                        '#08306b';
+}
 
-let stateLayer = L.geoJson(null, {
-  style: { color: '#3182bd', weight: 1, fillOpacity: 0.6 }
+// Load combined file and draw filtered features
+function loadLayer(year, layerType) {
+  const filePath = "data/combined.json";
+
+  fetch(filePath)
+    .then(res => res.json())
+    .then(data => {
+      if (!data.features || !Array.isArray(data.features)) {
+        console.warn("Invalid GeoJSON structure");
+        return;
+      }
+
+      const filtered = data.features.filter(f =>
+        f.properties &&
+        f.properties.layer === layerType &&
+        f.properties.year == year
+      );
+
+      if (geoLayer) map.removeLayer(geoLayer);
+
+      geoLayer = L.geoJSON({ type: "FeatureCollection", features: filtered }, {
+        style: feature => ({
+          fillColor: getColor(feature.properties.value),
+          weight: 1,
+          opacity: 1,
+          color: 'white',
+          dashArray: '3',
+          fillOpacity: 0.8
+        }),
+        onEachFeature: (feature, layer) => {
+          const name = feature.properties.NAME || feature.properties.name || "";
+          const val = feature.properties.value != null ? feature.properties.value.toLocaleString() : "N/A";
+          layer.bindPopup(`${name}: $${val}`);
+        }
+      }).addTo(map);
+
+      if (filtered.length > 0) {
+        try {
+          map.fitBounds(geoLayer.getBounds());
+        } catch (e) {
+          console.warn("Could not fit map bounds:", e);
+        }
+      }
+    })
+    .catch(err => {
+      console.error("Failed to load combined.json:", err);
+    });
+}
+
+// Initial load
+loadLayer(currentYear, currentLayer);
+
+// Year dropdown
+document.getElementById("year-select").addEventListener("change", e => {
+  currentYear = e.target.value;
+  loadLayer(currentYear, currentLayer);
 });
 
+// Layer toggle
 document.querySelectorAll('input[name="layer"]').forEach(input => {
-  input.addEventListener('change', function () {
-    if (this.value === 'county') {
-      map.removeLayer(stateLayer);
-      map.addLayer(countyLayer);
-    } else {
-      map.removeLayer(countyLayer);
-      map.addLayer(stateLayer);
-    }
+  input.addEventListener("change", e => {
+    currentLayer = e.target.value;
+    loadLayer(currentYear, currentLayer);
   });
 });
 
-document.getElementById('download').addEventListener('click', function () {
-  const layer = document.querySelector('input[name="layer"]:checked').value;
-  alert(`Downloading data for ${layer}`);
+// Download button (points to CSV instead of shapefile)
+document.getElementById("download").addEventListener("click", () => {
+  const csvUrl = `data/combined.csv`;
+  const a = document.createElement("a");
+  a.href = csvUrl;
+  a.download = `combined.csv`;
+  a.click();
 });
