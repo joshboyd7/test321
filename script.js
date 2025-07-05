@@ -1,102 +1,85 @@
 
-const map = L.map('map').setView([37.8, -96], 4);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 12,
-  attribution: '&copy; OpenStreetMap contributors'
+// script.js
+let map = L.map("map").setView([37.8, -96], 4);
+let geoLayer;
+let currentYear = "2024";
+let currentLayer = "county";
+
+// Basemap
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  attribution: "Map data © OpenStreetMap contributors"
 }).addTo(map);
 
-// File locations
-const GITHUB_RAW_BASE = "https://raw.githubusercontent.com/joshboyd7/test321/main/data";
-const COMBINED_GEOJSON_URL = `${GITHUB_RAW_BASE}/combined_pagerank.geojson`;
-const COMBINED_CSV_URL = `${GITHUB_RAW_BASE}/combined_pagerank.csv`;
+// Color scale
+function getColor(d) {
+  if (d == null || isNaN(d)) return '#cccccc'; // no data = gray
 
-let fullGeojsonData = null;
-
-function getColorScale(value) {
-  if (value == null) return '#ccc';
-  return value > 0.01 ? '#08306b' :
-         value > 0.005 ? '#2171b5' :
-         value > 0.001 ? '#6baed6' :
-         value > 0 ? '#c6dbef' :
-                     '#f7fbff';
+  return d > 9411.148 ? '#a50f15' :
+         d > 2511.106 ? '#de2d26' :
+         d > 2168.236 ? '#fc9272' :
+         d > 1952.638 ? '#fee0d2' :
+         d > 1792.199 ? '#eff3ff' :
+         d > 1660.116 ? '#bdd7e7' :
+         d > 1536.735 ? '#6baed6' :
+         d > 1407.501 ? '#2171b5' :
+                        '#08306b';
 }
 
-function loadLayer(layer, year, column) {
-  if (!fullGeojsonData) {
-    fetch(COMBINED_GEOJSON_URL)
-      .then(res => res.json())
-      .then(data => {
-        fullGeojsonData = data;
-        updateMap(layer, year, column);
-      })
-      .catch(err => console.error("Failed to load combined GeoJSON:", err));
-  } else {
-    updateMap(layer, year, column);
-  }
+// Load data
+function loadLayer(year, layerType) {
+  const filePath = `data/${year}-${layerType}.json`;
+
+  fetch(filePath)
+    .then(res => res.json())
+    .then(data => {
+      if (geoLayer) map.removeLayer(geoLayer);
+
+      geoLayer = L.geoJSON(data, {
+        style: feature => ({
+          fillColor: getColor(feature.properties.value),
+          weight: 1,
+          opacity: 1,
+          color: 'white',
+          dashArray: '3',
+          fillOpacity: 0.8
+        }),
+        onEachFeature: (feature, layer) => {
+          const name = feature.properties.NAME || feature.properties.name || "";
+          const val = feature.properties.value != null ? feature.properties.value.toLocaleString() : "N/A";
+          layer.bindPopup(`${name}: $${val}`);
+        }
+      }).addTo(map);
+
+      map.fitBounds(geoLayer.getBounds());
+    })
+    .catch(err => {
+      console.error("Error loading data:", err);
+    });
 }
 
-function updateMap(layer, year, column) {
-  const filtered = {
-    ...fullGeojsonData,
-    features: fullGeojsonData.features.filter(f =>
-      f.properties.layer === layer &&
-      f.properties.year === parseInt(year) &&
-      f.properties[column] != null
-    )
-  };
+// Initial load
+loadLayer(currentYear, currentLayer);
 
-  if (window.currentLayer) map.removeLayer(window.currentLayer);
-
-  window.currentLayer = L.geoJSON(filtered, {
-    style: feature => ({
-      color: "#555",
-      weight: 1,
-      fillOpacity: 0.7,
-      fillColor: getColorScale(feature.properties[column])
-    }),
-    onEachFeature: (feature, layer) => {
-      const val = feature.properties[column];
-      const name = feature.properties.name || feature.properties.id;
-      layer.bindPopup(`<strong>${name}</strong><br>${column}: ${val != null ? val.toFixed(5) : "N/A"}`);
-    }
-  }).addTo(map);
-}
-
-function getCurrentParams() {
-  const year = document.getElementById('year-select').value;
-  const layer = document.querySelector('input[name="layer"]:checked').value;
-  const column = document.getElementById('column-select').value;
-  return { layer, year, column };
-}
-
-document.getElementById('year-select').addEventListener('change', () => {
-  const { layer, year, column } = getCurrentParams();
-  loadLayer(layer, year, column);
+// Year dropdown
+document.getElementById("year-select").addEventListener("change", e => {
+  currentYear = e.target.value;
+  loadLayer(currentYear, currentLayer);
 });
 
-document.querySelectorAll('input[name="layer"]').forEach(radio => {
-  radio.addEventListener('change', () => {
-    const { layer, year, column } = getCurrentParams();
-    loadLayer(layer, year, column);
+// Layer toggle (county/state)
+document.querySelectorAll('input[name="layer"]').forEach(input => {
+  input.addEventListener("change", e => {
+    currentLayer = e.target.value;
+    loadLayer(currentYear, currentLayer);
   });
 });
 
-document.getElementById('column-select').addEventListener('change', () => {
-  const { layer, year, column } = getCurrentParams();
-  loadLayer(layer, year, column);
+// Download button
+document.getElementById("download").addEventListener("click", () => {
+  const url = `data/${currentYear}-${currentLayer}.json`;
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${currentYear}-${currentLayer}.json`;
+  a.click();
 });
-
-document.getElementById('download').addEventListener('click', () => {
-  const link = document.createElement('a');
-  link.href = COMBINED_CSV_URL;
-  link.download = 'combined_pagerank.csv';
-  link.click();
-});
-
-// Initial load — use 'metro' even if user has 'county' selected
-window.addEventListener('load', () => {
-  const { layer, year, column } = getCurrentParams();
-  loadLayer(layer, year, column);
-});
-
