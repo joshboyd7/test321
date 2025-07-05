@@ -1,3 +1,4 @@
+
 const map = L.map('map').setView([37.8, -96], 4);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -43,7 +44,7 @@ function updateMap(layer, year, column) {
       const matchesColumn = f.properties[column] != null;
       const matchesYear = (layer === "county")
         ? f.properties.year === parseInt(year)
-        : true;  // Ignore year filter for metro
+        : true; // no year filtering for metro
       return matchesLayer && matchesYear && matchesColumn;
     })
   };
@@ -71,19 +72,27 @@ function updateMap(layer, year, column) {
 }
 
 function getCurrentParams() {
-  const year = document.getElementById('year-select').value;
   const layer = document.querySelector('input[name="layer"]:checked').value;
+  const yearSelect = document.getElementById('year-select');
+  const year = yearSelect ? yearSelect.value : null;
   const column = document.getElementById('column-select').value;
   return { layer, year, column };
 }
 
-document.getElementById('year-select').addEventListener('change', () => {
-  const { layer, year, column } = getCurrentParams();
-  loadLayer(layer, year, column);
-});
+// Layer toggle logic: show/hide sidebar controls
+const countyOptions = document.getElementById('county-options');
+const metroOptions = document.getElementById('metro-options');
 
 document.querySelectorAll('input[name="layer"]').forEach(radio => {
   radio.addEventListener('change', () => {
+    if (radio.checked && radio.value === 'county') {
+      countyOptions.classList.remove('hidden');
+      metroOptions.classList.add('hidden');
+    } else if (radio.checked && radio.value === 'metro') {
+      countyOptions.classList.add('hidden');
+      metroOptions.classList.remove('hidden');
+    }
+
     const { layer, year, column } = getCurrentParams();
     loadLayer(layer, year, column);
   });
@@ -94,6 +103,14 @@ document.getElementById('column-select').addEventListener('change', () => {
   loadLayer(layer, year, column);
 });
 
+const yearSelect = document.getElementById('year-select');
+if (yearSelect) {
+  yearSelect.addEventListener('change', () => {
+    const { layer, year, column } = getCurrentParams();
+    loadLayer(layer, year, column);
+  });
+}
+
 document.getElementById('download').addEventListener('click', () => {
   const link = document.createElement('a');
   link.href = COMBINED_CSV_URL;
@@ -101,10 +118,8 @@ document.getElementById('download').addEventListener('click', () => {
   link.click();
 });
 
-// Initial load — use 'metro' even if user has 'county' selected
+// Initial load
 window.addEventListener('load', () => {
-  const column = document.getElementById('column-select').value;
-  const year = document.getElementById('year-select').value;
-  loadLayer('metro', year, column);
+  const { layer, year, column } = getCurrentParams();
+  loadLayer(layer, year, column);
 });
-
