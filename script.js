@@ -41,7 +41,9 @@ function updateMap(layer, year, column) {
     features: fullGeojsonData.features.filter(f => {
       const matchesLayer = f.properties.layer === layer;
       const matchesColumn = f.properties[column] != null;
-      const matchesYear = (layer === "metro") ? true : f.properties.year === parseInt(year);
+      const matchesYear = (layer === "county")
+        ? f.properties.year === parseInt(year)
+        : true;  // Ignore year filter for metro
       return matchesLayer && matchesYear && matchesColumn;
     })
   };
@@ -105,3 +107,4 @@ window.addEventListener('load', () => {
   const year = document.getElementById('year-select').value;
   loadLayer('metro', year, column);
 });
+
