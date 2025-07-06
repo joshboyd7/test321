@@ -1,5 +1,4 @@
 
-
 let map = L.map("map").setView([37.8, -96], 4);
 let geoLayer;
 
@@ -9,7 +8,7 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 
 // Color scale
 function getColor(d) {
-  if (d == null || isNaN(d)) return '#cccccc'; // fallback for missing values
+  if (d == null || isNaN(d)) return '#cccccc';
   return d > 0.01 ? '#a50f15' :
          d > 0.005 ? '#de2d26' :
          d > 0.001 ? '#fc9272' :
@@ -17,36 +16,38 @@ function getColor(d) {
                  '#f7fbff';
 }
 
-// Determine which column to use based on UI
+// Decide which column to use based on filter selection
 function getSelectedColumn() {
-  const geography = document.querySelector('input[name="geography"]:checked')?.value;
+  const filterType = document.getElementById("filter-type-select").value;
 
-  if (geography === "metro") {
-    const filterType = document.getElementById("filter-type-select").value;
-
-    if (filterType === "race") {
-      const race = document.getElementById("race-select").value;
-      return `race_${race}`;
-    }
-
-    if (filterType === "age") {
-      const age = document.getElementById("age-select").value.replace("+", "plus").replace("-", "_");
-      return `age_${age}`;
-    }
-
-    if (filterType === "industry") {
-      const naics = document.getElementById("industry-input").value;
-      return `industry_${naics}`;
-    }
-
-    return "total_flowHH"; // default fallback
+  if (filterType === "race") {
+    const race = document.getElementById("race-select").value;
+    return `race_${capitalize(race)}`;
   }
 
-  // Default for county (until more logic is added)
-  return "total_flowHH";
+  if (filterType === "age") {
+    const age = document.getElementById("age-select").value;
+    return `age_${age.replace("+", "plus").replace("-", "_")}`;
+  }
+
+  if (filterType === "education") {
+    const educ = document.getElementById("educ-select").value;
+    return `educ_${educ}`;
+  }
+
+  if (filterType === "industry") {
+    const naics = document.getElementById("industry-input").value.trim();
+    return `industry_${naics}`;
+  }
+
+  return "total_flowHH"; // fallback default
 }
 
-// Load and draw layer
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
+// Load and draw the selected column
 function loadLayer(column) {
   const filePath = "data/combined_pagerank.geojson";
 
@@ -95,25 +96,36 @@ function loadLayer(column) {
     });
 }
 
-// Redraw when any UI input changes
+// Re-render the map with current filters
 function refreshMap() {
   const column = getSelectedColumn();
   loadLayer(column);
 }
 
-// Initial load
+// Initial render
 refreshMap();
 
-// Hook up UI events
-document.querySelectorAll('input[name="geography"]').forEach(input => {
-  input.addEventListener("change", refreshMap);
+// UI event listeners
+document.getElementById("filter-type-select").addEventListener("change", () => {
+  updateFilterVisibility();
+  refreshMap();
 });
-document.getElementById("filter-type-select").addEventListener("change", refreshMap);
+
 document.getElementById("race-select").addEventListener("change", refreshMap);
 document.getElementById("age-select").addEventListener("change", refreshMap);
+document.getElementById("educ-select")?.addEventListener("change", refreshMap);
 document.getElementById("industry-input").addEventListener("input", refreshMap);
 
-// Download button (assumes matching CSV exists)
+// Optional: Show/hide filter-specific selectors
+function updateFilterVisibility() {
+  const val = document.getElementById("filter-type-select").value;
+  document.getElementById("race-wrapper").classList.toggle("hidden", val !== "race");
+  document.getElementById("age-wrapper").classList.toggle("hidden", val !== "age");
+  document.getElementById("educ-wrapper")?.classList.toggle("hidden", val !== "education");
+  document.getElementById("industry-wrapper").classList.toggle("hidden", val !== "industry");
+}
+
+// Download
 document.getElementById("download").addEventListener("click", () => {
   const a = document.createElement("a");
   a.href = "data/combined_pagerank.csv";
