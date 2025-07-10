@@ -101,17 +101,31 @@ function getColor(d) {
 
 // === Map Refresh ===
 function refreshMap() {
-  const geography = document.querySelector('input[name="geography"]:checked')?.value;
-  if (geography !== "metro") {
-    if (geoLayer) map.removeLayer(geoLayer);
-    return;
+  if (geoLayer) map.removeLayer(geoLayer);
+
+  const geography = document.querySelector('input[name="geography"]:checked').value;
+  let url;
+
+  if (geography === "county") {
+    // always IRS county
+    url = "output/irs_county_pagerank_combined.geojson";
+  } else {
+    // metro: ACS or IRS
+    const src = document.getElementById("metro-source-select").value;
+    url = src === "irs"
+      ? "output/irs_pagerank_combined.geojson"
+      : "output/pagerank_combined.geojson";
   }
 
-  const column = getSelectedColumn();
-  if (column) {
-    loadLayer(column);
-  }
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      geojsonData = data;
+      drawLayer(getSelectedColumn());
+    })
+    .catch(console.error);
 }
+
 
 // === Filter Visibility ===
 function updateFilterVisibility() {
@@ -151,15 +165,31 @@ function setupEventListeners() {
   const ind = document.getElementById("industry-input");
   if (ind) ind.addEventListener("input", refreshMap);
 
-  const download = document.getElementById("download");
-  if (download) {
-    download.addEventListener("click", () => {
-      const a = document.createElement("a");
-      a.href = "data/combined_pagerank.csv";
-      a.download = "combined_pagerank.csv";
-      a.click();
-    });
+document.getElementById("download").addEventListener("click", () => {
+  const geo = document.querySelector('input[name="geography"]:checked').value;
+  let href, filename;
+
+  if (geo === "county") {
+    href     = "output/irs_county_pagerank_combined.csv";
+    filename = "irs_county_pagerank_combined.csv";
+  } else {
+    const src = document.getElementById("metro-source-select").value;
+    if (src === "irs") {
+      href     = "output/irs_pagerank_combined.csv";
+      filename = "irs_pagerank_combined.csv";
+    } else {
+      href     = "output/pagerank_combined.csv";
+      filename = "pagerank_combined.csv";
+    }
   }
+
+  const a = document.createElement("a");
+  a.href = href;
+  a.download = filename;
+  a.click();
+});
+
+
 }
 
 // === Init ===

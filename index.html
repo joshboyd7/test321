@@ -36,10 +36,37 @@
     <!-- County-level controls -->
     <div id="county-options">
       <h2>Source</h2>
-      <select id="source-select">
-        <option value="irs" selected>IRS</option>
-        <option value="dataaxle">DataAxle</option>
+    <!-- County-level controls -->
+    <div id="county-options">
+      <h2>Source</h2>
+-     <select id="source-select">
+-       <option value="irs" selected>IRS</option>
+-       <option value="dataaxle">DataAxle</option>
+-     </select>
++     <select id="source-select">
++       <option value="irs" selected>IRS</option>
++     </select>
+
+      <h2>Year</h2>
+      <select id="year-select" name="year">
+        <!-- years… -->
       </select>
+    </div>
+
+    <!-- Metro-level controls -->
+    <div id="metro-options" class="hidden">
++     <h2>Source</h2>
++     <select id="metro-source-select">
++       <option value="acs" selected>ACS</option>
++       <option value="irs">IRS</option>
++     </select>
+
+      <h2>Filter by</h2>
+      <select id="filter-type-select">
+        <!-- … -->
+      </select>
+      <!-- …rest unchanged… -->
+
 
       <h2>Year</h2>
       <select id="year-select" name="year">
