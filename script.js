@@ -1,122 +1,170 @@
-/* global L */
-const MAPBOX_TOKEN = "";            // ← add token if you want Mapbox tiles
-const MAP_CENTRE  = [39, -98];
-const MAP_ZOOM    = 4.2;
+let map = L.map("map").setView([37.8, -96], 4);
+let geoLayer;
 
-// -----------------------------------------------------------------------------
-// helper: colour scale for rank (1 = best → dark blue; worst = light red)
-function rankColor(rank, maxRank) {
-  if (!rank) return "#ccc";
-  const t = (rank - 1) / (maxRank - 1);      // 0 (best) → 1 (worst)
-  const r = Math.round(255 * t);
-  const g = Math.round(255 * (1 - t) * 0.6);
-  const b = Math.round(255 * (1 - t));
-  return `rgb(${r},${g},${b})`;
-}
-// -----------------------------------------------------------------------------
-// map init
-const map = L.map("map").setView(MAP_CENTRE, MAP_ZOOM);
-L.tileLayer(
-  `https://tile.openstreetmap.org/{z}/{x}/{y}.png`,
-  { attribution: "&copy; OpenStreetMap" }
-).addTo(map);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  attribution: "Map data © OpenStreetMap contributors"
+}).addTo(map);
 
-// state
-let currentLayer = null;
-let geojsonData  = null;     // loaded file
-let maxRankCache = {};       // memoised max rank per col
+// Human-readable labels
+const LABEL_MAP = {
+  "total_flowHH": "Total Household Flow",
+  "total_flowPER": "Total Person Flow",
+  "race_Black": "Black",
+  "race_White": "White",
+  "race_Hispanic": "Hispanic",
+  "age_25_35": "Age 25–35",
+  "age_35_65": "Age 35–65",
+  "age_65plus": "Age 65+",
+  "educ_NoCollege": "No College",
+  "educ_WithCollege": "With College"
+};
 
-// UI elements
-const geoRadio  = document.querySelectorAll('input[name="geography"]');
-const metroBox  = document.getElementById("metro-options");
-const filterSel = id => document.getElementById(id);
+// === Column Selector ===
+function getSelectedColumn() {
+  const type = document.getElementById("filter-type-select").value;
 
-// -----------------------------------------------------------------------------
-// build column name based on UI selections
-function selectedColumn() {
-  const geo = document.querySelector('input[name="geography"]:checked').value;
-  if (geo === "county") {                   // county = IRS only
-    const year = 2017;                      // or make dropdown if needed
-    return `irs_county_rank_${year}`;
+  if (type === "race") {
+    return `race_${document.getElementById("race-select").value}`;
   }
-  // metro
-  const src   = filterSel("metro-source-select").value;   // acs / irs
-  const type  = filterSel("filter-type-select").value;
-
-  if (type === "total")   return `${src}_total_flow${filterSel("total-select").value}_rank`;
-  if (type === "race")    return `${src}_race_${filterSel("race-select").value}_rank`;
-  if (type === "age")     return `${src}_age_${filterSel("age-select").value}_rank`;
-  if (type === "education") return `${src}_educ_${filterSel("educ-select").value}_rank`;
-  if (type === "industry")  {
-    const code = filterSel("industry-input").value.padStart(2,"0");
-    return `${src}_industry_${code}_rank`;
+  if (type === "age") {
+    const val = document.getElementById("age-select").value;
+    return `age_${val.replace("+", "plus").replace("-", "_")}`;
   }
-  return `${src}_metro_rank_2017`;          // default fallback
+  if (type === "education") {
+    return `educ_${document.getElementById("educ-select").value}`;
+  }
+  if (type === "industry") {
+    const code = document.getElementById("industry-input").value.trim();
+    return `industry_${code}`;
+  }
+  if (type === "total") {
+    return document.getElementById("total-select").value === "HH"
+      ? "total_flowHH"
+      : "total_flowPER";
+  }
+
+  return null;
 }
 
-// -----------------------------------------------------------------------------
-// load correct GeoJSON file based on geography
-async function loadData() {
-  const geo = document.querySelector('input[name="geography"]:checked').value;
-  const url = geo === "metro"
-    ? "output/irs_pagerank_combined.geojson"          // this includes ACS + IRS metro ranks
-    : "output/irs_county_pagerank_combined.geojson";  // county (IRS only)
+// === Load Data ===
+function loadLayer(column) {
+  fetch("data/combined_pagerank.geojson")
+    .then(res => res.json())
+    .then(data => {
+      if (!data.features) return;
 
-  const res  = await fetch(url);
-  geojsonData = await res.json();
-  drawLayer();
+      const filtered = data.features.filter(f =>
+        f.properties && f.properties[column] != null
+      );
+
+      if (geoLayer) map.removeLayer(geoLayer);
+
+      geoLayer = L.geoJSON({ type: "FeatureCollection", features: filtered }, {
+        style: feature => ({
+          fillColor: getColor(feature.properties[column]),
+          weight: 1,
+          opacity: 1,
+          color: 'white',
+          dashArray: '3',
+          fillOpacity: 0.8
+        }),
+        onEachFeature: (feature, layer) => {
+          const name = feature.properties.metro_name || feature.properties.NAME || "Unnamed";
+          const val = feature.properties[column];
+          const label = LABEL_MAP[column] || column;
+          layer.bindPopup(`<strong>${name}</strong><br>${label}: ${val?.toFixed?.(5) ?? "N/A"}`);
+        }
+      }).addTo(map);
+
+      if (filtered.length > 0) {
+        try {
+          map.fitBounds(geoLayer.getBounds());
+        } catch (e) {
+          console.warn("Could not fit bounds:", e);
+        }
+      }
+    })
+    .catch(err => {
+      console.error("Failed to load GeoJSON:", err);
+    });
 }
 
-// -----------------------------------------------------------------------------
-// draw / redraw layer
-function drawLayer() {
-  if (currentLayer) map.removeLayer(currentLayer);
-  const col = selectedColumn();
-  if (!col || !geojsonData) return;
+// === Color Scale ===
+function getColor(d) {
+  if (d == null || isNaN(d)) return "#ccc";
+  return d > 0.01 ? "#a50f15" :
+         d > 0.005 ? "#de2d26" :
+         d > 0.001 ? "#fc9272" :
+         d > 0 ? "#fee0d2" :
+                 "#f7fbff";
+}
 
-  // memoise max rank to keep colour scale stable
-  if (!maxRankCache[col]) {
-    maxRankCache[col] = geojsonData.features
-      .map(f => +f.properties[col])
-      .filter(x => x > 0)
-      .reduce((a,b) => Math.max(a,b), 0);
+// === Map Refresh ===
+function refreshMap() {
+  const geography = document.querySelector('input[name="geography"]:checked')?.value;
+  if (geography !== "metro") {
+    if (geoLayer) map.removeLayer(geoLayer);
+    return;
   }
-  const maxRank = maxRankCache[col];
 
-  currentLayer = L.geoJSON(geojsonData, {
-    style: f => ({
-      color: "#666", weight: 0.5, fillOpacity: 0.8,
-      fillColor: rankColor(+f.properties[col], maxRank)
-    }),
-    onEachFeature: (f, layer) => {
-      layer.bindTooltip(`<strong>${f.properties.NAME || f.properties.metro_name}</strong><br>
-                         Rank: ${f.properties[col] ?? "N/A"}`);
+  const column = getSelectedColumn();
+  if (column) {
+    loadLayer(column);
+  }
+}
+
+// === Filter Visibility ===
+function updateFilterVisibility() {
+  const val = document.getElementById("filter-type-select").value;
+
+  const wrappers = {
+    race: document.getElementById("race-wrapper"),
+    age: document.getElementById("age-wrapper"),
+    education: document.getElementById("educ-wrapper"),
+    industry: document.getElementById("industry-wrapper"),
+    total: document.getElementById("total-wrapper")
+  };
+
+  Object.keys(wrappers).forEach(key => {
+    if (wrappers[key]) {
+      wrappers[key].classList.toggle("hidden", key !== val);
     }
-  }).addTo(map);
-}
-
-// -----------------------------------------------------------------------------
-// UI reactions
-function syncUI() {
-  // show / hide metro controls
-  const geo = document.querySelector('input[name="geography"]:checked').value;
-  metroBox.classList.toggle("hidden", geo === "county");
-
-  // sub-filter visibility
-  const type = filterSel("filter-type-select").value;
-  ["total","race","age","education","industry"].forEach(t => {
-    filterSel(`${t}-wrapper`).classList.toggle("hidden", type !== t);
   });
-  drawLayer();
 }
 
-// listeners
-[...geoRadio].forEach(r => r.addEventListener("change", () => { loadData(); syncUI(); }));
-document.getElementById("metro-source-select").addEventListener("change", syncUI);
-document.getElementById("filter-type-select").addEventListener("change", syncUI);
-["total-select","race-select","age-select","educ-select","industry-input"].forEach(id =>
-  filterSel(id).addEventListener("input", syncUI));
+// === Setup Events ===
+function setupEventListeners() {
+  document.querySelectorAll('input[name="geography"]').forEach(radio => {
+    radio.addEventListener("change", refreshMap);
+  });
 
-// initial load
-loadData().then(syncUI);
+  document.getElementById("filter-type-select").addEventListener("change", () => {
+    updateFilterVisibility();
+    refreshMap();
+  });
 
+  ["race-select", "age-select", "educ-select", "total-select"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener("change", refreshMap);
+  });
+
+  const ind = document.getElementById("industry-input");
+  if (ind) ind.addEventListener("input", refreshMap);
+
+  const download = document.getElementById("download");
+  if (download) {
+    download.addEventListener("click", () => {
+      const a = document.createElement("a");
+      a.href = "data/combined_pagerank.csv";
+      a.download = "combined_pagerank.csv";
+      a.click();
+    });
+  }
+}
+
+// === Init ===
+document.addEventListener("DOMContentLoaded", () => {
+  setupEventListeners();
+  updateFilterVisibility(); // show correct filter block
+  refreshMap();             // draw the first valid layer
+});
