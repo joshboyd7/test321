@@ -31,7 +31,7 @@ function getSelectedColumn() {
   const type = document.getElementById("filter-type-select")?.value;
   const geography = document.querySelector('input[name="geography"]:checked')?.value;
 
-  if (geography === "county" && type === "year") {
+  if (geography === "county" || type === "year") {
     const val = document.getElementById("year-select").value;
     return `irs_county_rank_${val}`;
   }
