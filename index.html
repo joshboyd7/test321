@@ -36,7 +36,11 @@
     <!-- County-level controls -->
     <div id="county-options">
       <h2>Source</h2>
-
+      <select id="Source-select" name="source">
+        <option value = "Data Axel" selected>Data Axel</option>
+        <option value = "IRS" selected>IRS</option>        
+      </select>
+      
       <h2>Year</h2>
       <select id="year-select" name="year">
         <option value="2023" selected>2023</option>
@@ -58,11 +62,11 @@
 
       <label>Filter by
         <select id="filter-type-select">
-          <option value="none" selected>-- choose --</option>
+          <option value="total" selected>All moves</option>
           <option value="race">Race</option>
           <option value="age">Age Group</option>
           <option value="education">Education</option>
-          <option value="industry">Industry (2-digit NAICS)</option>
+          <option value="industry">Industry (1-digit NAICS)</option>
           <option value="year">Year</option>
         </select>
       </label>
