@@ -29,6 +29,12 @@ const LABEL_MAP = {
 
 function getSelectedColumn() {
   const type = document.getElementById("filter-type-select")?.value;
+  const geography = document.querySelector('input[name="geography"]:checked')?.value;
+
+  if (geography === "county" && type === "year") {
+    const val = document.getElementById("year-select").value;
+    return `irs_county_rank_${val}`;
+  }
 
   if (type === "race") {
     return `rank_race_${document.getElementById("race-select").value}`;
@@ -43,10 +49,6 @@ function getSelectedColumn() {
   if (type === "industry") {
     const code = document.getElementById("industry-input").value.trim();
     return `rank_industry_${code}`;
-  }
-  if (type === "year") {
-    const val = document.getElementById("yeartwo-select").value;
-    return `irs_county_rank_${val}`;
   }
 
   return "rank_total_flowPER"; // fallback
@@ -120,6 +122,7 @@ function getColor(d) {
 function refreshMap() {
   const geography = document.querySelector('input[name="geography"]:checked')?.value;
   const column = getSelectedColumn();
+  console.log("Selected column:", column);
   if (column && geography) {
     loadLayer(column, geography);
   }
