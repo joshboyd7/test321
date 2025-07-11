@@ -64,7 +64,10 @@ function loadLayer(column, geography) {
   let url, labelField;
 
   if (geography === "county") {
-    url = "/test321/" + FILES.county;
+    const source = document.getElementById("Source-select")?.value;
+    const key = `county_${source.toLowerCase().replaceAll(" ", "")}`;
+    url = "/test321/" + FILES[key];
+
     labelField = "NAMELSAD";
   } else {
     const type = document.getElementById("filter-type-select").value;
