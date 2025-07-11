@@ -36,10 +36,6 @@
     <!-- County-level controls -->
     <div id="county-options">
       <h2>Source</h2>
-      <select id="source-select">
-        <option value="irs" selected>IRS</option>
-        <option value="dataaxle">DataAxle</option>
-      </select>
 
       <h2>Year</h2>
       <select id="year-select" name="year">
@@ -67,6 +63,7 @@
           <option value="age">Age Group</option>
           <option value="education">Education</option>
           <option value="industry">Industry (2-digit NAICS)</option>
+          <option value="year">Year</option>
         </select>
       </label>
 
@@ -100,8 +97,24 @@
       <label id="industry-wrapper" class="hidden">Industry (2-digit NAICS)
         <input type="text" id="industry-input" placeholder="e.g. 23" maxlength="4" />
       </label>
-    </div>
 
+      <!-- Year selector-->
+      <label id="yeartwo-wrapper" class="hidden">Year
+        <select id="yeartwo-select">
+        <option value="2023" selected>2023</option>
+        <option value="2022">2022</option>
+        <option value="2021">2021</option>
+        <option value="2020">2020</option>
+        <option value="2019">2019</option>
+        <option value="2018">2018</option>
+        <option value="2017">2017</option>
+        <option value="2016">2016</option>
+        <option value="2015">2015</option>
+        <option value="2014">2014</option>
+      </select>
+    </label>
+    </div>
+    
     <h2>Download</h2>
     <button id="download">Download Current Layer</button>
   </div>
@@ -149,6 +162,7 @@
     const ageWrapper        = document.getElementById('age-wrapper');
     const educWrapper       = document.getElementById('educ-wrapper');
     const industryWrapper   = document.getElementById('industry-wrapper');
+    const yeartwoWrapper   = document.getElementById('yeartwo-wrapper');
 
     filterTypeSelect.addEventListener('change', () => {
       const val = filterTypeSelect.value;
@@ -156,6 +170,7 @@
       ageWrapper.classList.toggle('hidden',      val !== 'age');
       educWrapper.classList.toggle('hidden',     val !== 'education');
       industryWrapper.classList.toggle('hidden', val !== 'industry');
+      yeartwoWrapper.classList.toggle('hidden',  val !== 'year');
     });
   </script>
 

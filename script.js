@@ -1,3 +1,6 @@
+
+// script.js - Updated for combined ACS and IRS PageRank data
+
 let map = L.map("map").setView([37.8, -96], 4);
 let geoLayer;
 
@@ -5,7 +8,12 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "Map data © OpenStreetMap contributors"
 }).addTo(map);
 
-// Human-readable labels
+const FILES = {
+  county: "data/irs_county_pagerank_combined.geojson",
+  metro_irs: "data/irs_pagerank_combined.geojson",
+  metro_acs: "data/acs_pagerank_combined.geojson"
+};
+
 const LABEL_MAP = {
   "total_flowHH": "Total Household Flow",
   "total_flowPER": "Total Person Flow",
@@ -19,43 +27,52 @@ const LABEL_MAP = {
   "educ_WithCollege": "With College"
 };
 
-// === Column Selector ===
 function getSelectedColumn() {
-  const type = document.getElementById("filter-type-select").value;
+  const type = document.getElementById("filter-type-select")?.value;
 
   if (type === "race") {
-    return `race_${document.getElementById("race-select").value}`;
+    return `rank_race_${document.getElementById("race-select").value}`;
   }
   if (type === "age") {
     const val = document.getElementById("age-select").value;
-    return `age_${val.replace("+", "plus").replace("-", "_")}`;
+    return `rank_age_${val.replace("+", "plus").replace("-", "_")}`;
   }
   if (type === "education") {
-    return `educ_${document.getElementById("educ-select").value}`;
+    return `rank_educ_${document.getElementById("educ-select").value}`;
   }
   if (type === "industry") {
     const code = document.getElementById("industry-input").value.trim();
-    return `industry_${code}`;
+    return `rank_industry_${code}`;
   }
-  if (type === "total") {
-    return document.getElementById("total-select").value === "HH"
-      ? "total_flowHH"
-      : "total_flowPER";
+  if (type === "year") {
+    const val = document.getElementById("yeartwo-select").value;
+    return `irs_county_rank_${val}`;
   }
 
-  return null;
+  return "rank_total_flowPER"; // fallback
 }
 
-// === Load Data ===
-function loadLayer(column) {
-  fetch("data/combined_pagerank.geojson")
+function loadLayer(column, geography) {
+  let url, labelField;
+
+  if (geography === "county") {
+    url = FILES.county;
+    labelField = "NAMELSAD";
+  } else {
+    const type = document.getElementById("filter-type-select").value;
+    url = (type === "none") ? FILES.metro_irs : FILES.metro_acs;
+    labelField = "NAME";
+  }
+
+  fetch(url)
     .then(res => res.json())
     .then(data => {
       if (!data.features) return;
 
-      const filtered = data.features.filter(f =>
-        f.properties && f.properties[column] != null
-      );
+      const filtered = data.features.filter(f => {
+        const props = f.properties || {};
+        return props[column] != null;
+      });
 
       if (geoLayer) map.removeLayer(geoLayer);
 
@@ -69,10 +86,10 @@ function loadLayer(column) {
           fillOpacity: 0.8
         }),
         onEachFeature: (feature, layer) => {
-          const name = feature.properties.metro_name || feature.properties.NAME || "Unnamed";
+          const name = feature.properties[labelField] || "Unnamed";
           const val = feature.properties[column];
-          const label = LABEL_MAP[column] || column;
-          layer.bindPopup(`<strong>${name}</strong><br>${label}: ${val?.toFixed?.(5) ?? "N/A"}`);
+          const label = LABEL_MAP[column.replace("rank_", "")] || column;
+          layer.bindPopup(`<strong>${name}</strong><br>${label} Rank: ${val ?? "N/A"}`);
         }
       }).addTo(map);
 
@@ -89,42 +106,34 @@ function loadLayer(column) {
     });
 }
 
-// === Color Scale ===
 function getColor(d) {
   if (d == null || isNaN(d)) return "#ccc";
-  return d > 0.01 ? "#a50f15" :
-         d > 0.005 ? "#de2d26" :
-         d > 0.001 ? "#fc9272" :
-         d > 0 ? "#fee0d2" :
-                 "#f7fbff";
+  return d <= 100 ?
+    d < 20 ? "#a50f15" :
+    d < 40 ? "#de2d26" :
+    d < 60 ? "#fc9272" :
+    d < 80 ? "#fee0d2" :
+            "#f7fbff"
+  : "#ccc";
 }
 
-// === Map Refresh ===
 function refreshMap() {
   const geography = document.querySelector('input[name="geography"]:checked')?.value;
-  if (geography !== "metro") {
-    if (geoLayer) map.removeLayer(geoLayer);
-    return;
-  }
-
   const column = getSelectedColumn();
-  if (column) {
-    loadLayer(column);
+  if (column && geography) {
+    loadLayer(column, geography);
   }
 }
 
-// === Filter Visibility ===
 function updateFilterVisibility() {
   const val = document.getElementById("filter-type-select").value;
-
   const wrappers = {
     race: document.getElementById("race-wrapper"),
     age: document.getElementById("age-wrapper"),
     education: document.getElementById("educ-wrapper"),
     industry: document.getElementById("industry-wrapper"),
-    total: document.getElementById("total-wrapper")
+    year: document.getElementById("yeartwo-wrapper")
   };
-
   Object.keys(wrappers).forEach(key => {
     if (wrappers[key]) {
       wrappers[key].classList.toggle("hidden", key !== val);
@@ -132,10 +141,12 @@ function updateFilterVisibility() {
   });
 }
 
-// === Setup Events ===
 function setupEventListeners() {
   document.querySelectorAll('input[name="geography"]').forEach(radio => {
-    radio.addEventListener("change", refreshMap);
+    radio.addEventListener("change", () => {
+      updateFilterVisibility();
+      refreshMap();
+    });
   });
 
   document.getElementById("filter-type-select").addEventListener("change", () => {
@@ -143,7 +154,7 @@ function setupEventListeners() {
     refreshMap();
   });
 
-  ["race-select", "age-select", "educ-select", "total-select"].forEach(id => {
+  ["race-select", "age-select", "educ-select", "yeartwo-select"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener("change", refreshMap);
   });
@@ -154,17 +165,18 @@ function setupEventListeners() {
   const download = document.getElementById("download");
   if (download) {
     download.addEventListener("click", () => {
+      const geography = document.querySelector('input[name="geography"]:checked')?.value;
+      let path = geography === "county" ? FILES.county : FILES.metro_acs;
       const a = document.createElement("a");
-      a.href = "data/combined_pagerank.csv";
-      a.download = "combined_pagerank.csv";
+      a.href = path.replace(".geojson", ".csv");
+      a.download = path.split("/").pop().replace(".geojson", ".csv");
       a.click();
     });
   }
 }
 
-// === Init ===
 document.addEventListener("DOMContentLoaded", () => {
   setupEventListeners();
-  updateFilterVisibility(); // show correct filter block
-  refreshMap();             // draw the first valid layer
+  updateFilterVisibility();
+  refreshMap();
 });
