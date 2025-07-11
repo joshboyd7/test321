@@ -72,7 +72,7 @@ function loadLayer(column, geography) {
     labelField = "NAMELSAD";
   } else {
     const type = document.getElementById("filter-type-select").value;
-    url = "/test321/" + ((type === "none") ? FILES.metro_irs : FILES.metro_acs);
+    url = "/test321/" + ((type === "year" || type === "none") ? FILES.metro_irs : FILES.metro_acs);
     labelField = "NAME";
   }
 
