@@ -39,10 +39,9 @@ function getSelectedColumn() {
     return `irs_county_rank_${val}`;
   }
   if (geography !== "county" && type === "year") {
-    const val = document.getElementById("year-select").value;
+    const val = document.getElementById("yeartwo-select").value;
     return `irs_metro_rank_${val}`;
   }
-
   if (type === "race") {
     return `rank_race_${document.getElementById("race-select").value}`;
   }
