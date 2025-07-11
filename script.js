@@ -56,11 +56,11 @@ function loadLayer(column, geography) {
   let url, labelField;
 
   if (geography === "county") {
-    url = FILES.county;
+    url = "/test321/" + FILES.county;
     labelField = "NAMELSAD";
   } else {
     const type = document.getElementById("filter-type-select").value;
-    url = (type === "none") ? FILES.metro_irs : FILES.metro_acs;
+    url = "/test321/" + ((type === "none") ? FILES.metro_irs : FILES.metro_acs);
     labelField = "NAME";
   }
 
