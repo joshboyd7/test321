@@ -53,7 +53,7 @@ function getSelectedColumn() {
     return `rank_educ_${document.getElementById("educ-select").value}`;
   }
   if (type === "industry") {
-    const code = document.getElementById("industry-input").value.trim();
+    const code = document.getElementById("industry-input").value;
     return `rank_industry_${code}`;
   }
 
@@ -172,7 +172,8 @@ function setupEventListeners() {
   });
 
   const ind = document.getElementById("industry-input");
-  if (ind) ind.addEventListener("input", refreshMap);
+  if (ind) ind.addEventListener("change", refreshMap); // changed from "input" to "change"
+
 
   const download = document.getElementById("download");
   if (download) {
