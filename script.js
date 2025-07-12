@@ -64,8 +64,8 @@ function loadLayer(column, geography) {
   let url, labelField;
 
   if (geography === "county") {
-    const source = document.getElementById("Source-select")?.value;
-    const key = `county_${source.toLowerCase().replaceAll(" ", "")}`;
+    const key = "county_irs";  // Hardcode to IRS since no Source-select exists
+
     url = "/test321/" + FILES[key];
 
     labelField = "NAMELSAD";
