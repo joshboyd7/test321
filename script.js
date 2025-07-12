@@ -179,7 +179,7 @@ function setupEventListeners() {
   if (download) {
     download.addEventListener("click", () => {
       const geography = document.querySelector('input[name="geography"]:checked')?.value;
-      let path = geography === "county" ? FILES.county : FILES.metro_acs;
+      let path = geography === "county" ? FILES.county_irs : FILES.metro_acs;
       const a = document.createElement("a");
       a.href = path.replace(".geojson", ".csv");
       a.download = path.split("/").pop().replace(".geojson", ".csv");
