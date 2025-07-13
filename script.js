@@ -10,8 +10,8 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 
 const FILES = {
   county_irs: "data/irs_county_pagerank_combined.geojson",
-  axel_chicago: "data/axel_chicago.geojson",
-  axel_boston: "data/axel_boston.geojson",  
+  axel_chicago: "data/axel_Chicago.geojson",
+  axel_boston: "data/axel_Boston.geojson",  
   metro_irs: "data/irs_pagerank_combined.geojson",
   metro_acs: "data/acs_pagerank_combined.geojson"
 };
