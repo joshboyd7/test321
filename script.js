@@ -103,13 +103,6 @@ function loadLayer(column, geography) {
         }
       }).addTo(map);
 
-      if (filtered.length > 0) {
-        try {
-          map.fitBounds(geoLayer.getBounds());
-        } catch (e) {
-          console.warn("Could not fit bounds:", e);
-        }
-      }
     })
     .catch(err => {
       console.error("Failed to load GeoJSON:", err);
