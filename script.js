@@ -10,8 +10,8 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 
 const FILES = {
   county_irs: "data/irs_county_pagerank_combined.geojson",
-  axel_chicago: "data/axel_Chicago.geojson",
-  axel_boston: "data/axel_Boston.geojson",  
+  axel_Chicago: "data/axel_Chicago.geojson",
+  axel_Boston: "data/axel_Boston.geojson",  
   metro_irs: "data/irs_pagerank_combined.geojson",
   metro_acs: "data/acs_pagerank_combined.geojson"
 };
@@ -76,9 +76,9 @@ function loadLayer(column, geography) {
       
     const city = document.getElementById("city-select").value;
     if (city === "Chicago") {
-      url = "/test321/" + FILES.axel_chicago;
+      url = "/test321/" + FILES.axel_Chicago;
     } else if (city === "Boston") {
-      url = "/test321/" + FILES.axel_boston;
+      url = "/test321/" + FILES.axel_Boston;
     } else {
       console.error("Unknown city:", city);
       return;
