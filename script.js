@@ -162,7 +162,7 @@ function setupEventListeners() {
 
   // -- All subtype selectors that can change the column we need
   //      • added "year-select" so County-year changes fire refreshMap()
-  ["race-select", "age-select", "educ-select", "year-select"
+  ["race-select", "age-select", "educ-select", "year-select",
    "yeartwo-select"  // ← NEW
   ].forEach(id => {
     const el = document.getElementById(id);
