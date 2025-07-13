@@ -10,9 +10,15 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 
 const FILES = {
   county_irs: "data/irs_county_pagerank_combined.geojson",
-  county_dataaxel: "data/dataaxel_county_pagerank_combined.geojson",
+  dataaxel_Chicago: "data/axel_Chicago",
+  dataaxel_Boston: "data/axel_Boston",  
   metro_irs: "data/irs_pagerank_combined.geojson",
   metro_acs: "data/acs_pagerank_combined.geojson"
+};
+
+const AXEL_BY_CITY = {
+  Chicago: FILES.dataaxel_Chicago,
+  Boston:  FILES.dataaxel_Boston
 };
 
 
@@ -32,7 +38,7 @@ const LABEL_MAP = {
 function getSelectedColumn() {
   const type = document.getElementById("filter-type-select")?.value;
   const geography = document.querySelector('input[name="geography"]:checked')?.value;
-  
+  if (geography === "neighborhood") return "rank";
   if (geography === "county") {
     const val = document.getElementById("year-select").value;
     return `irs_county_rank_${val}`;
@@ -61,6 +67,12 @@ function getSelectedColumn() {
 
 function loadLayer(column, geography) {
   let url, labelField;
+
+  if (geography === "neighborhood") {
+    const city = document.getElementById("city-select").value;   // Chicago / Boston
+    url        = "/test321/" + AXEL_BY_CITY[city];               // pick file by city
+    labelField = "NAME";                                         // name field in Axel GeoJSON
+  }
 
   if (geography === "county") {
     const key = "county_irs";  // Hardcode to IRS since no Source-select exists
@@ -163,7 +175,7 @@ function setupEventListeners() {
   // -- All subtype selectors that can change the column we need
   //      • added "year-select" so County-year changes fire refreshMap()
   ["race-select", "age-select", "educ-select",
-   "yeartwo-select"  // ← NEW
+   "yeartwo-select", "city-select"  
   ].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener("change", refreshMap);
