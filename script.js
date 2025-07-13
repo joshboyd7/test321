@@ -153,32 +153,41 @@ function updateFilterVisibility() {
 }
 
 function setupEventListeners() {
+  // -- Geography radio buttons (Neighborhood / County / Metro)
   document.querySelectorAll('input[name="geography"]').forEach(radio => {
     radio.addEventListener("change", () => {
       updateFilterVisibility();
-      refreshMap();
+      refreshMap();               // redraw as soon as geography changes
     });
   });
 
+  // -- Metro “Filter by” dropdown (total / race / age / … / year)
   document.getElementById("filter-type-select").addEventListener("change", () => {
     updateFilterVisibility();
-    refreshMap();
+    refreshMap();                 // redraw as soon as filter type changes
   });
 
-  ["race-select", "age-select", "educ-select", "yeartwo-select", "year-select"].forEach(id => {
+  // -- All subtype selectors that can change the column we need
+  //      • added "year-select" so County-year changes fire refreshMap()
+  ["race-select", "age-select", "educ-select",
+   "yeartwo-select", "year-select"  // ← NEW
+  ].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener("change", refreshMap);
   });
 
+  // -- Industry dropdown (1-digit NAICS)
   const ind = document.getElementById("industry-input");
-  if (ind) ind.addEventListener("change", refreshMap); // changed from "input" to "change"
+  if (ind) ind.addEventListener("change", refreshMap);
 
-
+  // -- Download-button handler (unchanged)
   const download = document.getElementById("download");
   if (download) {
     download.addEventListener("click", () => {
       const geography = document.querySelector('input[name="geography"]:checked')?.value;
-      let path = geography === "county" ? FILES.county_irs : FILES.metro_acs;
+      const path = geography === "county"
+                   ? FILES.county_irs
+                   : FILES.metro_acs;
       const a = document.createElement("a");
       a.href = path.replace(".geojson", ".csv");
       a.download = path.split("/").pop().replace(".geojson", ".csv");
@@ -186,6 +195,7 @@ function setupEventListeners() {
     });
   }
 }
+
 
 document.addEventListener("DOMContentLoaded", () => {
   setupEventListeners();
