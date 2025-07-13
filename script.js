@@ -10,7 +10,8 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 
 const FILES = {
   county_irs: "data/irs_county_pagerank_combined.geojson",
-  county_dataaxel: "data/dataaxel_county_pagerank_combined.geojson",
+  axel_chicago: "data/axel_chicago.geojson",
+  axel_boston: "data/axel_boston.geojson",  
   metro_irs: "data/irs_pagerank_combined.geojson",
   metro_acs: "data/acs_pagerank_combined.geojson"
 };
@@ -33,6 +34,9 @@ function getSelectedColumn() {
   const type = document.getElementById("filter-type-select")?.value;
   const geography = document.querySelector('input[name="geography"]:checked')?.value;
   
+  if (geography === "neighborhood") {
+    return `rank`;
+  }
   if (geography === "county") {
     const val = document.getElementById("year-select").value;
     return `irs_county_rank_${val}`;
@@ -68,6 +72,21 @@ function loadLayer(column, geography) {
     url = "/test321/" + FILES[key];
 
     labelField = "NAMELSAD";
+  } else if (geography === "neighborhood"){
+      
+    const city = document.getElementById("city-select").value;
+    if (city === "Chicago") {
+      url = "/test321/" + FILES.axel_chicago;
+    } else if (city === "Boston") {
+      url = "/test321/" + FILES.axel_boston;
+    } else {
+      console.error("Unknown city:", city);
+      return;
+    }
+
+  labelField = "district_id"; // or use another property for popup labeling if needed
+
+      
   } else {
     const type = document.getElementById("filter-type-select").value;
     url = "/test321/" + ((type === "year" || type === "none") ? FILES.metro_irs : FILES.metro_acs);
@@ -162,7 +181,7 @@ function setupEventListeners() {
 
   // -- All subtype selectors that can change the column we need
   //      • added "year-select" so County-year changes fire refreshMap()
-  ["race-select", "age-select", "educ-select", "year-select", "yeartwo-select"].forEach(id => {
+  ["race-select", "age-select", "educ-select", "year-select", "yeartwo-select", "city-select"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener("change", refreshMap);
   });
