@@ -165,7 +165,7 @@ function setupEventListeners() {
     refreshMap();
   });
 
-  ["race-select", "age-select", "educ-select", "yeartwo-select"].forEach(id => {
+  ["race-select", "age-select", "educ-select", "yeartwo-select", "year-select"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener("change", refreshMap);
   });
@@ -192,3 +192,32 @@ document.addEventListener("DOMContentLoaded", () => {
   updateFilterVisibility();
   refreshMap();
 });
+
+// ---------------------------------------------------------------------------
+// Simple “what’s-going-on” helper.
+// Logs key variable values on interaction, and refreshes the map.
+// ---------------------------------------------------------------------------
+(function () {
+  // Show current selections in the console
+  function logCurrentState(eventLabel) {
+    const geography = document.querySelector('input[name="geography"]:checked')?.value;
+    const type      = document.getElementById('filter-type-select')?.value;
+    const countyYr  = document.getElementById('year-select')?.value;
+    const metroYr   = document.getElementById('yeartwo-select')?.value;
+    const column    = getSelectedColumn();
+    console.log(`[${eventLabel}] geo=${geography} | type=${type} | countyYr=${countyYr} | metroYr=${metroYr} | column=${column}`);
+  }
+
+  // Log + refresh on every sidebar click
+  document.getElementById('sidebar').addEventListener('click', () => {
+    logCurrentState('sidebar click');
+    refreshMap();
+  });
+
+  // Log initial state once
+  logCurrentState('initial');
+})();
+
+
+
+
