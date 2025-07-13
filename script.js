@@ -32,9 +32,8 @@ const LABEL_MAP = {
 function getSelectedColumn() {
   const type = document.getElementById("filter-type-select")?.value;
   const geography = document.querySelector('input[name="geography"]:checked')?.value;
-  const source = document.getElementById("Source-select")?.value;
-
-  if (geography === "county" && source === "IRS") {
+  
+  if (geography === "county") {
     const val = document.getElementById("year-select").value;
     return `irs_county_rank_${val}`;
   }
