@@ -114,12 +114,13 @@ function loadLayer(column, geography) {
           dashArray: '3',
           fillOpacity: 0.8
         }),
+        // --- inside loadLayer(...) -----------------------------------------------
         onEachFeature: (feature, layer) => {
           const name = feature.properties[labelField] || "Unnamed";
-          const val = feature.properties[column];
-          const label = LABEL_MAP[column.replace("rank_", "")] || column;
-          layer.bindPopup(`<strong>${name}</strong><br>${label} Rank: ${val ?? "N/A"}`);
+          const val  = feature.properties[column];        // the actual rank value
+          layer.bindPopup(`<strong>${name}</strong><br>Rank: ${val ?? "N/A"}`);
         }
+
       }).addTo(map);
 
     })
