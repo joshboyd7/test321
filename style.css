@@ -124,15 +124,16 @@ html, body {
 }
 
 .legend {
-  padding: 10px;
+  padding: 12px 20px;
   font-size: 12px;
   text-align: center;
   background: white;
   border-radius: 8px;
-  width: fit-content;
-  max-width: 600px;
+  width: 720px;          /* fixed wider width */
+  max-width: 90vw;       /* prevent overflow */
   margin: 0 auto;
 }
+
 
 .color-bar {
   display: grid;
