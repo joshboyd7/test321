@@ -221,8 +221,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Bounding boxes for each city (southwest, northeast)
       const cityBounds = {
-        Chicago: [[41.64, -87.94], [42.02, -87.52]],
-        Boston:  [[42.23, -71.19], [42.40, -70.95]]
+        Chicago: [[41.35, -88.25], [42.25, -87.30]],  // includes suburbs: Evanston, Oak Park, etc.
+        Boston:  [[42.05, -71.35], [42.55, -70.75]]   // includes Cambridge, Somerville, Quincy, etc.
       };
 
       if (cityBounds[city]) {
