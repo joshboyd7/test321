@@ -17,8 +17,6 @@ const FILES = {
 };
 
 let maxRank = 100;  // default, will be updated per dataset
-const values = filtered.map(f => f.properties[column]).filter(d => d != null && !isNaN(d));
-maxRank = Math.max(...values);  // dynamically compute maximum rank
 
 const LABEL_MAP = {
   "total_flowHH": "Total Household Flow",
@@ -105,6 +103,9 @@ function loadLayer(column, geography) {
         const props = f.properties || {};
         return props[column] != null;
       });
+
+      const values = filtered.map(f => f.properties[column]).filter(v => v != null && !isNaN(v));
+      maxRank = Math.max(...values);
 
       if (geoLayer) map.removeLayer(geoLayer);
 
