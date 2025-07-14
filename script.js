@@ -131,14 +131,20 @@ function loadLayer(column, geography) {
 
 function getColor(d) {
   if (d == null || isNaN(d)) return "#ccc";
-  return d <= 100 ?
-    d < 20 ? "#a50f15" :
-    d < 40 ? "#de2d26" :
-    d < 60 ? "#fc9272" :
-    d < 80 ? "#fee0d2" :
-            "#f7fbff"
-  : "#ccc";
+
+  // Convert rank (1 = best) to percentile
+  const p = 1 - (d - 1) / 100;  // rank out of 100
+
+  // Assign bins based on percentile thresholds
+  if (p <= 0.50) return "#08306b";
+  if (p <= 0.75) return "#2171b5";
+  if (p <= 0.80) return "#4292c6";
+  if (p <= 0.90) return "#6baed6";
+  if (p <= 0.95) return "#9ecae1";
+  if (p <= 0.99) return "#c6dbef";
+  return "#3c0008";  // top 1⁄64 (highest ranked)
 }
+
 
 function refreshMap() {
   const geography = document.querySelector('input[name="geography"]:checked')?.value;
@@ -214,9 +220,10 @@ document.addEventListener("DOMContentLoaded", () => {
   refreshMap();
 
   const cityBounds = {
-    Chicago: [[41.40, -88.20], [42.30, -87.30]],
-    Boston:  [[42.00, -71.50], [42.60, -70.80]]
+    Chicago: [[41.20, -88.40], [42.40, -87.00]],  // zoomed out more
+    Boston:  [[41.80, -71.70], [42.70, -70.60]]   // zoomed out more
   };
+
 
   const citySelect = document.getElementById("city-select");
   const geographyRadios = document.querySelectorAll('input[name="geography"]');
