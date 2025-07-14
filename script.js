@@ -16,6 +16,9 @@ const FILES = {
   metro_acs: "data/acs_pagerank_combined.geojson"
 };
 
+let maxRank = 100;  // default, will be updated per dataset
+const values = filtered.map(f => f.properties[column]).filter(d => d != null && !isNaN(d));
+maxRank = Math.max(...values);  // dynamically compute maximum rank
 
 const LABEL_MAP = {
   "total_flowHH": "Total Household Flow",
@@ -130,20 +133,20 @@ function loadLayer(column, geography) {
 }
 
 function getColor(d) {
-  if (d == null || isNaN(d)) return "#ccc";
+  if (d == null || isNaN(d) || !maxRank) return "#ccc";
 
-  // Convert rank (1 = best) to percentile
-  const p = 1 - (d - 1) / 100;  // rank out of 100
+  // Compute percentile: lower rank = better
+  const p = 1 - (d - 1) / (maxRank - 1);
 
-  // Assign bins based on percentile thresholds
   if (p <= 0.50) return "#f46d43";
   if (p <= 0.75) return "#fdae61";
   if (p <= 0.80) return "#fee08b";
   if (p <= 0.90) return "#d9ef8b";
   if (p <= 0.95) return "#a6d96a";
   if (p <= 0.99) return "#66bd63";
-  return "#1a9850";  // top 1⁄64 (highest ranked)
+  return "#1a9850";  // top ~1%
 }
+
 
 
 function refreshMap() {
