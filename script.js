@@ -1,7 +1,16 @@
 
 // script.js - Updated for combined ACS and IRS PageRank data
 
-let map = L.map("map").setView([37.8, -96], 4);
+// create map *without* its default zoom buttons
+let map = L.map("map", {
+  center: [37.8, -96],
+  zoom:   4,
+  zoomControl: false        // turn off default (topleft) control
+});
+
+// add the zoom buttons back on the right
+L.control.zoom({ position: "topright" }).addTo(map);
+
 let geoLayer;
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
