@@ -123,16 +123,39 @@ html, body {
   font-size: 12px;
 }
 
-.legend .color-bar,
-.legend .labels {
-  display: flex;
-  justify-content: space-between;
+.legend {
+  padding: 10px;
+  font-size: 12px;
+  text-align: center;
+  background: white;
+  border-radius: 8px;
+  width: fit-content;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
-.legend .labels span {
+.color-bar {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr); /* 9 bins */
+  gap: 1px;
+  height: 12px;
+  margin: 8px 0;
+}
+
+.color-bar .stop {
+  height: 100%;
+}
+
+.labels {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
   font-size: 10px;
+  margin-top: 4px;
+}
+
+.labels span {
   text-align: center;
-  width: 100%;  /* evenly distribute */
+  white-space: nowrap;
 }
 
 
