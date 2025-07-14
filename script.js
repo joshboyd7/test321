@@ -139,9 +139,11 @@ function getColor(d) {
   if (p <= 0.50) return "#08306b";
   if (p <= 0.75) return "#2171b5";
   if (p <= 0.80) return "#4292c6";
+  if (p <= 0.85) return "#4292c6";
   if (p <= 0.90) return "#6baed6";
   if (p <= 0.95) return "#9ecae1";
   if (p <= 0.99) return "#c6dbef";
+  if (p <= 0.999) return "#08306b";
   return "#3c0008";  // top 1⁄64 (highest ranked)
 }
 

@@ -122,3 +122,17 @@ html, body {
   justify-content: space-between;
   font-size: 12px;
 }
+
+.legend .color-bar,
+.legend .labels {
+  display: flex;
+  justify-content: space-between;
+}
+
+.legend .labels span {
+  font-size: 10px;
+  text-align: center;
+  width: 100%;  /* evenly distribute */
+}
+
+
