@@ -118,7 +118,7 @@ function loadLayer(column, geography) {
         onEachFeature: (feature, layer) => {
           const name = feature.properties[labelField] || "Unnamed";
           const val  = feature.properties[column];        // the actual rank value
-          layer.bindPopup(`<strong>${name}</strong><br>Rank: ${val ?? "N/A"}`);
+          layer.bindPopup(`Rank: ${val ?? "N/A"}`);
         }
 
       }).addTo(map);
