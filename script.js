@@ -136,15 +136,13 @@ function getColor(d) {
   const p = 1 - (d - 1) / 100;  // rank out of 100
 
   // Assign bins based on percentile thresholds
-  if (p <= 0.50) return "#08306b";
-  if (p <= 0.75) return "#2171b5";
-  if (p <= 0.80) return "#4292c6";
-  if (p <= 0.85) return "#4292c6";
-  if (p <= 0.90) return "#6baed6";
-  if (p <= 0.95) return "#9ecae1";
-  if (p <= 0.99) return "#c6dbef";
-  if (p <= 0.999) return "#08306b";
-  return "#3c0008";  // top 1⁄64 (highest ranked)
+  if (p <= 0.50) return "#f46d43";
+  if (p <= 0.75) return "#fdae61";
+  if (p <= 0.80) return "#fee08b";
+  if (p <= 0.90) return "#d9ef8b";
+  if (p <= 0.95) return "#a6d96a";
+  if (p <= 0.99) return "#66bd63";
+  return "#1a9850";  // top 1⁄64 (highest ranked)
 }
 
 
