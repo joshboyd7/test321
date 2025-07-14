@@ -203,21 +203,39 @@ function setupEventListeners() {
   const ind = document.getElementById("industry-input");
   if (ind) ind.addEventListener("change", refreshMap);
 
-  // -- Download-button handler (unchanged)
-  const download = document.getElementById("download");
-  if (download) {
-    download.addEventListener("click", () => {
-      const geography = document.querySelector('input[name="geography"]:checked')?.value;
-      const path = geography === "county"
-                   ? FILES.county_irs
-                   : FILES.metro_acs;
-      const a = document.createElement("a");
-      a.href = path.replace(".geojson", ".csv");
-      a.download = path.split("/").pop().replace(".geojson", ".csv");
-      a.click();
-    });
-  }
+  // -- Download-button handler
+const download = document.getElementById("download");
+if (download) {
+  download.addEventListener("click", () => {
+    const geography = document.querySelector('input[name="geography"]:checked')?.value;
+    let path;
+
+    if (geography === "neighborhood") {
+      const city = document.getElementById("city-select").value;
+      if (city === "Chicago") {
+        path = FILES.axel_Chicago;
+      } else if (city === "Boston") {
+        path = FILES.axel_Boston;
+      } else {
+        console.error("Unknown city for download.");
+        return;
+      }
+    } else if (geography === "county") {
+      path = FILES.county_irs;
+    } else {
+      const type = document.getElementById("filter-type-select").value;
+      path = (type === "year" || type === "none") ? FILES.metro_irs : FILES.metro_acs;
+    }
+
+    // Create CSV path
+    const csvPath = path.replace(".geojson", ".csv");
+    const a = document.createElement("a");
+    a.href = csvPath;
+    a.download = csvPath.split("/").pop();
+    a.click();
+  });
 }
+
 
 
 document.addEventListener("DOMContentLoaded", () => {
