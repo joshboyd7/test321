@@ -182,7 +182,7 @@ function setupEventListeners() {
 
   // -- All subtype selectors that can change the column we need
   //      • added "year-select" so County-year changes fire refreshMap()
-  ["race-select", "age-select", "educ-select", "year-select", "yeartwo-select", "city-select"].forEach(id => {
+  ["race-select", "age-select", "educ-select", "year-select", "yeartwo-select"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener("change", refreshMap);
   });
@@ -212,7 +212,28 @@ document.addEventListener("DOMContentLoaded", () => {
   setupEventListeners();
   updateFilterVisibility();
   refreshMap();
+
+  // === Recenter map when city changes ===
+  const citySelect = document.getElementById("city-select");
+  if (citySelect) {
+    citySelect.addEventListener("change", () => {
+      const city = citySelect.value;
+
+      // Bounding boxes for each city (southwest, northeast)
+      const cityBounds = {
+        Chicago: [[41.64, -87.94], [42.02, -87.52]],
+        Boston:  [[42.23, -71.19], [42.40, -70.95]]
+      };
+
+      if (cityBounds[city]) {
+        map.fitBounds(cityBounds[city]);
+      }
+
+      refreshMap();  // redraw layer after recenter
+    });
+  }
 });
+
 
 
 
