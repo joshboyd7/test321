@@ -203,20 +203,40 @@ function setupEventListeners() {
   const ind = document.getElementById("industry-input");
   if (ind) ind.addEventListener("change", refreshMap);
 
-  // -- Download-button handler (unchanged)
-  const download = document.getElementById("download");
-  if (download) {
-    download.addEventListener("click", () => {
-      const geography = document.querySelector('input[name="geography"]:checked')?.value;
-      const path = geography === "county"
-                   ? FILES.county_irs
-                   : FILES.metro_acs;
-      const a = document.createElement("a");
-      a.href = path.replace(".geojson", ".csv");
-      a.download = path.split("/").pop().replace(".geojson", ".csv");
-      a.click();
-    });
-  }
+// --- Download-button handler (new) ------------------------------------
+const download = document.getElementById("download");
+if (download) {
+  download.addEventListener("click", () => {
+    const geography = document.querySelector('input[name="geography"]:checked')?.value;
+    let   path      = null;
+
+    if (geography === "neighborhood") {
+      const city = document.getElementById("city-select").value;
+      path = (city === "Chicago") ? FILES.axel_Chicago
+           : (city === "Boston")  ? FILES.axel_Boston
+           : null;
+    } else if (geography === "county") {
+      path = FILES.county_irs;
+    } else {                         // metro
+      const type = document.getElementById("filter-type-select").value;
+      path = (type === "year" || type === "none")
+           ? FILES.metro_irs        // IRS metro file for total or year
+           : FILES.metro_acs;       // ACS metro file for race/age/educ/industry
+    }
+
+    if (!path) {                     // defensive guard
+      console.error("Could not determine CSV to download.");
+      return;
+    }
+
+    const csvPath  = path.replace(".geojson", ".csv");
+    const anchor   = document.createElement("a");
+    anchor.href    = csvPath;
+    anchor.download = csvPath.split("/").pop();  // just the file name
+    anchor.click();
+  });
+}
+
 }
 
 
