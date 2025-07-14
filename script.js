@@ -213,26 +213,38 @@ document.addEventListener("DOMContentLoaded", () => {
   updateFilterVisibility();
   refreshMap();
 
-  // === Recenter map when city changes ===
+  const cityBounds = {
+    Chicago: [[41.40, -88.20], [42.30, -87.30]],
+    Boston:  [[42.00, -71.50], [42.60, -70.80]]
+  };
+
   const citySelect = document.getElementById("city-select");
+  const geographyRadios = document.querySelectorAll('input[name="geography"]');
+
+  // Recenter when city is changed
   if (citySelect) {
     citySelect.addEventListener("change", () => {
       const city = citySelect.value;
-
-      // Bounding boxes for each city (southwest, northeast)
-      const cityBounds = {
-        Chicago: [[41.35, -88.25], [42.25, -87.30]],  // includes suburbs: Evanston, Oak Park, etc.
-        Boston:  [[42.05, -71.35], [42.55, -70.75]]   // includes Cambridge, Somerville, Quincy, etc.
-      };
-
       if (cityBounds[city]) {
         map.fitBounds(cityBounds[city]);
       }
-
-      refreshMap();  // redraw layer after recenter
+      refreshMap();
     });
   }
+
+  // Recenter when "Neighborhood" geography is selected
+  geographyRadios.forEach(radio => {
+    radio.addEventListener("change", () => {
+      if (radio.checked && radio.value === "neighborhood") {
+        const city = citySelect?.value;
+        if (cityBounds[city]) {
+          map.fitBounds(cityBounds[city]);
+        }
+      }
+    });
+  });
 });
+
 
 
 
