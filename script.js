@@ -37,7 +37,9 @@ const LABEL_MAP = {
   "age_35_65": "Age 35–65",
   "age_65plus": "Age 65+",
   "educ_NoCollege": "No College",
-  "educ_WithCollege": "With College"
+  "educ_SomeCollege": "Some College",
+  "educ_BA": "Bachelor's",
+  "educ_Grad": "Post Graduate"
 };
 
 function getSelectedColumn() {
