@@ -39,7 +39,7 @@ const LABEL_MAP = {
   "educ_NoCollege": "No College",
   "educ_SomeCollege": "Some College",
   "educ_BA": "Bachelor's",
-  "educ_Grad": "Post Graduate"
+  "educ_Grad": "Post-Bachelor's"
 };
 
 function getSelectedColumn() {
