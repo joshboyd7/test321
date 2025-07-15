@@ -82,7 +82,7 @@ function getSelectedColumn() {
 }
 
 function loadLayer(column, geography) {
-  let url, labelField;
+  let url, labelField, sourceName;
 
   if (geography === "county") {
     const key = "county_irs";  // Hardcode to IRS since no Source-select exists
@@ -107,10 +107,13 @@ function loadLayer(column, geography) {
       
   } else {
     const type = document.getElementById("filter-type-select").value;
+    const isIRS  = (type === "year" || type === "total");
     url = "/geopagerank/" + ((type === "year" || type === "none") ? FILES.metro_irs : FILES.metro_acs);
     labelField = "NAME";
     sourceName = isIRS ? "IRS" : "ACS";
   }
+
+  setSourceLabel(sourceName); 
 
   fetch(url)
     .then(res => res.json())
