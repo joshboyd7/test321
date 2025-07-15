@@ -82,38 +82,35 @@ function getSelectedColumn() {
 }
 
 function loadLayer(column, geography) {
-  let url, labelField, sourceName;
+  let url, labelField, sourceName;   // ← include sourceName here
 
+  /* ───────── 1. COUNTY (always IRS) ───────── */
   if (geography === "county") {
-    const key = "county_irs";  // Hardcode to IRS since no Source-select exists
-
-    url = "/geopagerank/" + FILES[key];
-    sourceName = "IRS";
+    url        = "/geopagerank/" + FILES.county_irs;
     labelField = "NAMELSAD";
-  } else if (geography === "neighborhood"){
-      sourceName = "Data Axel"
+    sourceName = "IRS";
+
+  /* ───────── 2. NEIGHBORHOOD (Data Axel) ───────── */
+  } else if (geography === "neighborhood") {
     const city = document.getElementById("city-select").value;
-    if (city === "Chicago") {
-      url = "/geopagerank/" + FILES.axel_Chicago;
-    } else if (city === "Boston") {
-      url = "/geopagerank/" + FILES.axel_Boston;
-    } else {
-      console.error("Unknown city:", city);
-      return;
-    }
+    url        = "/geopagerank/" + (city === "Chicago"
+                                   ? FILES.axel_Chicago
+                                   : FILES.axel_Boston);
+    labelField = "district_id";
+    sourceName = "Data Axel";
 
-  labelField = "district_id"; // or use another property for popup labeling if needed
-
-      
+  /* ───────── 3. METRO (IRS only for “Year” sample) ───────── */
   } else {
-    const type = document.getElementById("filter-type-select").value;
-    const isIRS  = (type === "year" || type === "total");
-    url = "/geopagerank/" + ((type === "year" || type === "none") ? FILES.metro_irs : FILES.metro_acs);
-    labelField = "NAME";
-    sourceName = isIRS ? "IRS" : "ACS";
+    const type  = document.getElementById("filter-type-select").value;
+    const isIRS = (type === "year");          // IRS when user picks “Year”
+    url         = "/geopagerank/" + (isIRS ? FILES.metro_irs
+                                           : FILES.metro_acs);
+    labelField  = "NAME";
+    sourceName  = isIRS ? "IRS" : "ACS";
   }
 
-  setSourceLabel(sourceName); 
+  /* ─── update the sidebar *before* loading the layer ─── */
+  setSourceLabel(sourceName);
 
   fetch(url)
     .then(res => res.json())
