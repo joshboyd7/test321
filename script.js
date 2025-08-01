@@ -199,7 +199,7 @@ function setupEventListeners() {
     refreshMap();
   });
 
-  ["race-select", "age-select", "educ-select", "year-select", "yeartwo-select"].forEach(id => {
+  ["race-select", "age-select", "educ-select", "year-select", "yeartwo-select", "acs-year-select"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener("change", refreshMap);
   });
