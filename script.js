@@ -86,27 +86,27 @@ function loadLayer(column, geography) {
 
   /* ───────── 1. COUNTY (always IRS) ───────── */
   if (geography === "county") {
-    url        = "/geopagerank/" + FILES.county_irs;
+    url        = "/test321/" + FILES.county_irs;
     labelField = "NAMELSAD";
-    sourceName = "IRS";
+    sourceName = "IRS county-level migration counts, 1991-2022";
 
   /* ───────── 2. NEIGHBORHOOD (Data Axel) ───────── */
   } else if (geography === "neighborhood") {
     const city = document.getElementById("city-select").value;
-    url        = "/geopagerank/" + (city === "Chicago"
+    url        = "/test321/" + (city === "Chicago"
                                    ? FILES.axel_Chicago
                                    : FILES.axel_Boston);
     labelField = "district_id";
-    sourceName = "Data Axel";
+    sourceName = "DataAxel neighborhood migration data, 2019-2023";
 
   /* ───────── 3. METRO (IRS only for “Year” sample) ───────── */
   } else {
     const type  = document.getElementById("filter-type-select").value;
     const isIRS = (type === "year");          // IRS when user picks “Year”
-    url         = "/geopagerank/" + (isIRS ? FILES.metro_irs
+    url         = "/test321/" + (isIRS ? FILES.metro_irs
                                            : FILES.metro_acs);
     labelField  = "NAME";
-    sourceName  = isIRS ? "IRS" : "ACS";
+    sourceName  = isIRS ? "IRS migration counts, 1991-2022, aggregated to the metro level" : "ACS microdata, 2018-2023";
   }
 
   /* ─── update the sidebar *before* loading the layer ─── */
