@@ -1,14 +1,12 @@
-
 // script.js - Updated for combined ACS and IRS PageRank data
 
 // create map *without* its default zoom buttons
 let map = L.map("map", {
   center: [37.8, -96],
   zoom:   4,
-  zoomControl: false        // turn off default (topleft) control
+  zoomControl: false
 });
 
-// add the zoom buttons back on the right
 L.control.zoom({ position: "topright" }).addTo(map);
 
 let geoLayer;
@@ -25,7 +23,7 @@ const FILES = {
   metro_acs: "data/acs_pagerank_combined.geojson"
 };
 
-let maxRank = 100;  // default, will be updated per dataset
+let maxRank = 100;
 
 const LABEL_MAP = {
   "total_flowHH": "Total Household Flow",
@@ -47,11 +45,10 @@ function setSourceLabel(src) {
   if (el) el.textContent = src;
 }
 
-
 function getSelectedColumn() {
   const type = document.getElementById("filter-type-select")?.value;
   const geography = document.querySelector('input[name="geography"]:checked')?.value;
-  
+
   if (geography === "neighborhood") {
     return `rank`;
   }
@@ -59,9 +56,12 @@ function getSelectedColumn() {
     const val = document.getElementById("year-select").value;
     return `irs_county_rank_${val}`;
   }
-  if (geography !== "county" && type === "year") {
-    const val = document.getElementById("yeartwo-select").value;
-    return `irs_metro_rank_${val}`;
+  if (geography === "metro") {
+    const source = document.querySelector('input[name="metro-source"]:checked')?.value;
+    if (source === "irs") {
+      const val = document.getElementById("yeartwo-select").value;
+      return `irs_metro_rank_${val}`;
+    }
   }
   if (type === "race") {
     return `rank_race_${document.getElementById("race-select").value}`;
@@ -78,38 +78,30 @@ function getSelectedColumn() {
     return `rank_industry_${code}`;
   }
 
-  return "rank_total_flowPER"; // fallback
+  return "rank_total_flowPER";
 }
 
 function loadLayer(column, geography) {
-  let url, labelField, sourceName;   // ← include sourceName here
+  let url, labelField, sourceName;
 
-  /* ───────── 1. COUNTY (always IRS) ───────── */
   if (geography === "county") {
     url        = "/test321/" + FILES.county_irs;
     labelField = "NAMELSAD";
     sourceName = "IRS county-level migration counts, 1991-2022";
-
-  /* ───────── 2. NEIGHBORHOOD (Data Axel) ───────── */
   } else if (geography === "neighborhood") {
     const city = document.getElementById("city-select").value;
-    url        = "/test321/" + (city === "Chicago"
-                                   ? FILES.axel_Chicago
-                                   : FILES.axel_Boston);
+    url        = "/test321/" + (city === "Chicago" ? FILES.axel_Chicago : FILES.axel_Boston);
     labelField = "district_id";
     sourceName = "DataAxel neighborhood migration data, 2019-2023";
-
-  /* ───────── 3. METRO (IRS only for “Year” sample) ───────── */
   } else {
-    const type  = document.getElementById("filter-type-select").value;
-    const isIRS = (type === "year");          // IRS when user picks “Year”
-    url         = "/test321/" + (isIRS ? FILES.metro_irs
-                                           : FILES.metro_acs);
+    const source = document.querySelector('input[name="metro-source"]:checked')?.value;
+    url         = "/test321/" + (source === "irs" ? FILES.metro_irs : FILES.metro_acs);
     labelField  = "NAME";
-    sourceName  = isIRS ? "IRS migration counts, 1991-2022, aggregated to the metro level" : "ACS microdata, 2018-2023";
+    sourceName  = source === "irs"
+      ? "IRS migration counts, 1991-2022, aggregated to the metro level"
+      : "ACS microdata, 2018-2023";
   }
 
-  /* ─── update the sidebar *before* loading the layer ─── */
   setSourceLabel(sourceName);
 
   fetch(url)
@@ -136,7 +128,6 @@ function loadLayer(column, geography) {
           dashArray: '3',
           fillOpacity: 0.8
         }),
-        // --- inside loadLayer(...) -----------------------------------------------
         onEachFeature: (feature, layer) => {
           const name = feature.properties[labelField] || "Unnamed";
           const val  = feature.properties[column];
@@ -144,12 +135,8 @@ function loadLayer(column, geography) {
             ? `Rank: ${val} / ${maxRank}`
             : "Rank: N/A";
           layer.bindPopup(`<strong>${name}</strong><br>${rankText}`);
-
         }
-
-
       }).addTo(map);
-
     })
     .catch(err => {
       console.error("Failed to load GeoJSON:", err);
@@ -159,7 +146,6 @@ function loadLayer(column, geography) {
 function getColor(d) {
   if (d == null || isNaN(d) || !maxRank) return "#ccc";
 
-  // Compute percentile: lower rank = better
   const p = 1 - (d - 1) / (maxRank - 1);
 
   if (p <= 0.50) return "#f46d43";
@@ -168,10 +154,8 @@ function getColor(d) {
   if (p <= 0.90) return "#d9ef8b";
   if (p <= 0.95) return "#a6d96a";
   if (p <= 0.99) return "#66bd63";
-  return "#1a9850";  // top ~1%
+  return "#1a9850";
 }
-
-
 
 function refreshMap() {
   const geography = document.querySelector('input[name="geography"]:checked')?.value;
@@ -196,70 +180,71 @@ function updateFilterVisibility() {
       wrappers[key].classList.toggle("hidden", key !== val);
     }
   });
+
+  const metroSource = document.querySelector('input[name="metro-source"]:checked')?.value;
+  document.getElementById("acs-filter-options")?.classList.toggle("hidden", metroSource !== "acs");
+  document.getElementById("irs-year-wrapper")?.classList.toggle("hidden", metroSource !== "irs");
 }
 
 function setupEventListeners() {
-  // -- Geography radio buttons (Neighborhood / County / Metro)
   document.querySelectorAll('input[name="geography"]').forEach(radio => {
     radio.addEventListener("change", () => {
       updateFilterVisibility();
-      refreshMap();               // redraw as soon as geography changes
+      refreshMap();
     });
   });
 
-  // -- Metro “Filter by” dropdown (total / race / age / … / year)
   document.getElementById("filter-type-select").addEventListener("change", () => {
     updateFilterVisibility();
-    refreshMap();                 // redraw as soon as filter type changes
+    refreshMap();
   });
 
-  // -- All subtype selectors that can change the column we need
-  //      • added "year-select" so County-year changes fire refreshMap()
   ["race-select", "age-select", "educ-select", "year-select", "yeartwo-select"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener("change", refreshMap);
   });
 
-  // -- Industry dropdown (1-digit NAICS)
   const ind = document.getElementById("industry-input");
   if (ind) ind.addEventListener("change", refreshMap);
 
-// --- Download-button handler (new) ------------------------------------
-const download = document.getElementById("download");
-if (download) {
-  download.addEventListener("click", () => {
-    const geography = document.querySelector('input[name="geography"]:checked')?.value;
-    let   path      = null;
-
-    if (geography === "neighborhood") {
-      const city = document.getElementById("city-select").value;
-      path = (city === "Chicago") ? FILES.axel_Chicago
-           : (city === "Boston")  ? FILES.axel_Boston
-           : null;
-    } else if (geography === "county") {
-      path = FILES.county_irs;
-    } else {                         // metro
-      const type = document.getElementById("filter-type-select").value;
-      path = (type === "year" || type === "none")
-           ? FILES.metro_irs        // IRS metro file for total or year
-           : FILES.metro_acs;       // ACS metro file for race/age/educ/industry
-    }
-
-    if (!path) {                     // defensive guard
-      console.error("Could not determine CSV to download.");
-      return;
-    }
-
-    const csvPath  = path.replace(".geojson", ".csv");
-    const anchor   = document.createElement("a");
-    anchor.href    = csvPath;
-    anchor.download = csvPath.split("/").pop();  // just the file name
-    anchor.click();
+  document.querySelectorAll('input[name="metro-source"]').forEach(radio => {
+    radio.addEventListener("change", () => {
+      updateFilterVisibility();
+      refreshMap();
+    });
   });
-}
 
-}
+  const download = document.getElementById("download");
+  if (download) {
+    download.addEventListener("click", () => {
+      const geography = document.querySelector('input[name="geography"]:checked')?.value;
+      let path = null;
 
+      if (geography === "neighborhood") {
+        const city = document.getElementById("city-select").value;
+        path = (city === "Chicago") ? FILES.axel_Chicago
+             : (city === "Boston")  ? FILES.axel_Boston
+             : null;
+      } else if (geography === "county") {
+        path = FILES.county_irs;
+      } else {
+        const source = document.querySelector('input[name="metro-source"]:checked')?.value;
+        path = (source === "irs") ? FILES.metro_irs : FILES.metro_acs;
+      }
+
+      if (!path) {
+        console.error("Could not determine CSV to download.");
+        return;
+      }
+
+      const csvPath = path.replace(".geojson", ".csv");
+      const anchor = document.createElement("a");
+      anchor.href = csvPath;
+      anchor.download = csvPath.split("/").pop();
+      anchor.click();
+    });
+  }
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   setupEventListeners();
@@ -267,15 +252,13 @@ document.addEventListener("DOMContentLoaded", () => {
   refreshMap();
 
   const cityBounds = {
-    Chicago: [[41.20, -88.40], [42.40, -87.00]],  // zoomed out more
-    Boston:  [[41.80, -71.70], [42.70, -70.60]]   // zoomed out more
+    Chicago: [[41.20, -88.40], [42.40, -87.00]],
+    Boston:  [[41.80, -71.70], [42.70, -70.60]]
   };
-
 
   const citySelect = document.getElementById("city-select");
   const geographyRadios = document.querySelectorAll('input[name="geography"]');
 
-  // Recenter when city is changed
   if (citySelect) {
     citySelect.addEventListener("change", () => {
       const city = citySelect.value;
@@ -286,7 +269,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Recenter when "Neighborhood" geography is selected
   geographyRadios.forEach(radio => {
     radio.addEventListener("change", () => {
       if (radio.checked && radio.value === "neighborhood") {
@@ -298,6 +280,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+
 
 
 
