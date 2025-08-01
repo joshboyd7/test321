@@ -86,14 +86,14 @@ function loadLayer(column, geography) {
 
   /* ───────── 1. COUNTY (always IRS) ───────── */
   if (geography === "county") {
-    url        = "/test321/" + FILES.county_irs;
+    url        = "/geopagerank/" + FILES.county_irs;
     labelField = "NAMELSAD";
     sourceName = "IRS county-level migration counts, 1991-2022";
 
   /* ───────── 2. NEIGHBORHOOD (Data Axel) ───────── */
   } else if (geography === "neighborhood") {
     const city = document.getElementById("city-select").value;
-    url        = "/test321/" + (city === "Chicago"
+    url        = "/geopagerank/" + (city === "Chicago"
                                    ? FILES.axel_Chicago
                                    : FILES.axel_Boston);
     labelField = "district_id";
@@ -103,7 +103,7 @@ function loadLayer(column, geography) {
   } else {
     const type  = document.getElementById("filter-type-select").value;
     const isIRS = (type === "year");          // IRS when user picks “Year”
-    url         = "/test321/" + (isIRS ? FILES.metro_irs
+    url         = "/geopagerank/" + (isIRS ? FILES.metro_irs
                                            : FILES.metro_acs);
     labelField  = "NAME";
     sourceName  = isIRS ? "IRS migration counts, 1991-2022, aggregated to the metro level" : "ACS microdata, 2018-2023";
