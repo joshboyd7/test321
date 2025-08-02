@@ -117,7 +117,7 @@ function loadLayer(column, geography) {
       sourceName = "IRS migration counts, 1991-2022, aggregated to the metro level";
     } else if (useRolling) {
       url = "/test321/" + FILES.acs_rolling5;
-      sourceName = `ACS 5-year microdata for ${acsYear}–${+acsYear + 4}`;
+      sourceName = `ACS microdata, 2005-2023`;
     } else {
       url = "/test321/" + FILES.metro_acs;
       sourceName = "ACS microdata, 2005–2023";
