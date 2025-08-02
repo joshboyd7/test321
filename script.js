@@ -20,8 +20,10 @@ const FILES = {
   axel_Chicago: "data/axel_Chicago.geojson",
   axel_Boston: "data/axel_Boston.geojson",  
   metro_irs: "data/irs_pagerank_combined.geojson",
-  metro_acs: "data/acs_pagerank_combined.geojson"
+  metro_acs: "data/acs_pagerank_combined.geojson",
+  acs_rolling5: "data/acs_rolling5_pagerank.geojson"   // ✅ add this
 };
+
 
 let maxRank = 100;
 
@@ -48,38 +50,50 @@ function setSourceLabel(src) {
 function getSelectedColumn() {
   const type = document.getElementById("filter-type-select")?.value;
   const geography = document.querySelector('input[name="geography"]:checked')?.value;
+  const acsYear = document.getElementById("acs-year-select")?.value;
 
   if (geography === "neighborhood") {
     return `rank`;
   }
+
   if (geography === "county") {
     const val = document.getElementById("year-select").value;
     return `irs_county_rank_${val}`;
   }
+
   if (geography === "metro") {
     const source = document.querySelector('input[name="metro-source"]:checked')?.value;
+    const isACS = (source === "acs");
+    const hasYear = isACS && acsYear && acsYear !== "All";
+    const suffix = hasYear ? `_${acsYear}` : "";
+
     if (source === "irs") {
       const val = document.getElementById("yeartwo-select").value;
       return `irs_metro_rank_${val}`;
     }
-  }
-  if (type === "race") {
-    return `rank_race_${document.getElementById("race-select").value}`;
-  }
-  if (type === "age") {
-    const val = document.getElementById("age-select").value;
-    return `rank_age_${val.replace("+", "plus").replace("-", "_")}`;
-  }
-  if (type === "education") {
-    return `rank_educ_${document.getElementById("educ-select").value}`;
-  }
-  if (type === "industry") {
-    const code = document.getElementById("industry-input").value;
-    return `rank_industry_${code}`;
+
+    if (type === "race") {
+      return `rank_race_${document.getElementById("race-select").value}${suffix}`;
+    }
+    if (type === "age") {
+      const val = document.getElementById("age-select").value;
+      return `rank_age_${val.replace("+", "plus").replace("-", "_")}${suffix}`;
+    }
+    if (type === "education") {
+      return `rank_educ_${document.getElementById("educ-select").value}${suffix}`;
+    }
+    if (type === "industry") {
+      const code = document.getElementById("industry-input").value;
+      return `rank_industry_${code}${suffix}`;
+    }
+
+    return `rank_total_flowPER${suffix}`;
   }
 
+  // fallback
   return "rank_total_flowPER";
 }
+
 
 function loadLayer(column, geography) {
   let url, labelField, sourceName;
@@ -95,12 +109,23 @@ function loadLayer(column, geography) {
     sourceName = "DataAxel neighborhood migration data, 2019-2023";
   } else {
     const source = document.querySelector('input[name="metro-source"]:checked')?.value;
-    url         = "/test321/" + (source === "irs" ? FILES.metro_irs : FILES.metro_acs);
-    labelField  = "NAME";
-    sourceName  = source === "irs"
-      ? "IRS migration counts, 1991-2022, aggregated to the metro level"
-      : "ACS microdata, 2018-2023";
+    const acsYear = document.getElementById("acs-year-select")?.value;
+    const useRolling = source === "acs" && acsYear && acsYear !== "All";
+  
+    if (source === "irs") {
+      url = "/test321/" + FILES.metro_irs;
+      sourceName = "IRS migration counts, 1991-2022, aggregated to the metro level";
+    } else if (useRolling) {
+      url = "/test321/" + FILES.acs_rolling5;
+      sourceName = `ACS 5-year microdata for ${acsYear}`;
+    } else {
+      url = "/test321/" + FILES.metro_acs;
+      sourceName = "ACS microdata, 2018–2023";
+    }
+  
+    labelField = "NAME";
   }
+
 
   setSourceLabel(sourceName);
 
@@ -229,7 +254,12 @@ function setupEventListeners() {
         path = FILES.county_irs;
       } else {
         const source = document.querySelector('input[name="metro-source"]:checked')?.value;
-        path = (source === "irs") ? FILES.metro_irs : FILES.metro_acs;
+        const acsYear = document.getElementById("acs-year-select")?.value;
+        const useRolling = source === "acs" && acsYear && acsYear !== "All";
+        path = (source === "irs")
+          ? FILES.metro_irs
+          : (useRolling ? FILES.acs_rolling5 : FILES.metro_acs);
+
       }
 
       if (!path) {
