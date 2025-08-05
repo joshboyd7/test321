@@ -127,7 +127,6 @@ function loadLayer(column, geography) {
   }
 
 
-
   setSourceLabel(sourceName);
 
   fetch(url)
