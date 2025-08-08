@@ -19,7 +19,6 @@ const FILES = {
   county_irs: "data/irs_county_pagerank_combined.geojson",
   axel_national: "data/axel_national.geojson",
   metro_irs: "data/irs_pagerank_combined.geojson",
-  metro_acs: "data/acs_rolling5_pagerank.geojson", 
   acs_rolling5: "data/acs_rolling5_pagerank.geojson" 
 };
 
@@ -274,7 +273,7 @@ function setupEventListeners() {
         const useRolling = source === "acs" && acsYear && acsYear !== "All";
         path = (source === "irs")
           ? FILES.metro_irs
-
+          : FILES.acs_rolling5;
       }
 
       if (!path) {
