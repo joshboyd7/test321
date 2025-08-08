@@ -288,6 +288,7 @@ function setupEventListeners() {
       anchor.click();
     });
   } 
+}
 
 // Moved back outside the download block
 document.addEventListener("DOMContentLoaded", () => {
