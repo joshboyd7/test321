@@ -288,7 +288,7 @@ function setupEventListeners() {
       anchor.click();
     });
   }
-}
+
 
 
 document.addEventListener("DOMContentLoaded", () => {
