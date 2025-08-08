@@ -19,6 +19,7 @@ const FILES = {
   county_irs: "data/irs_county_pagerank_combined.geojson",
   axel_national: "data/axel_national.geojson",
   metro_irs: "data/irs_pagerank_combined.geojson",
+  metro_acs: "data/acs_rolling5_pagerank.geojson", 
   acs_rolling5: "data/acs_rolling5_pagerank.geojson" 
 };
 
@@ -106,11 +107,11 @@ function loadLayer(column, geography) {
   let url, labelField, sourceName;
 
   if (geography === "county") {
-    url        = "/" + FILES.county_irs;
+    url        = FILES.county_irs;
     labelField = "NAMELSAD";
     sourceName = "IRS county-level migration counts, 1991-2022";
   } else if (geography === "neighborhood") {
-  url = "/" + FILES.axel_national;
+  url = FILES.axel_national;
   labelField = "district_id";  // or "name" if you added a label column
   sourceName = "DataAxel neighborhood migration data, 2019–2023 (National)";
   } else {
@@ -119,15 +120,12 @@ function loadLayer(column, geography) {
     const useRolling = source === "acs" && acsYear && acsYear !== "All";
   
     if (source === "irs") {
-      url = "/" + FILES.metro_irs;
+      url = FILES.metro_irs;
       sourceName = "IRS migration counts, 1991-2022, aggregated to the metro level";
-    } else if (useRolling) {
-      url = "/" + FILES.acs_rolling5;
-      sourceName = `ACS microdata, 2005-2023`;
     } else {
-      url = "/" + FILES.metro_acs;
-      sourceName = "ACS microdata, 2005–2023";
-    }
+      url = FILES.acs_rolling5;
+      sourceName = `ACS microdata, 2005-2023`;
+    } 
   
     labelField = "NAME";
   }
@@ -276,7 +274,6 @@ function setupEventListeners() {
         const useRolling = source === "acs" && acsYear && acsYear !== "All";
         path = (source === "irs")
           ? FILES.metro_irs
-          : (useRolling ? FILES.acs_rolling5 : FILES.metro_acs);
 
       }
 
@@ -295,6 +292,11 @@ function setupEventListeners() {
 }
 
 
+document.addEventListener("DOMContentLoaded", () => {
+  setupEventListeners();     // wire up your “geography” & “filter” controls
+  updateFilterVisibility();  // show the right controls for the default radio
+  refreshMap();              // draw that first layer
+});
 
 
 
