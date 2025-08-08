@@ -86,13 +86,13 @@ function getSelectedColumn() {
       return `rank_industry_${code}${suffix}`;
     }
     if (type === "children") {
-      return `rank_kids_flow_${document.getElementByID("children-select").value}${suffix}`;
+      return `rank_kids_flow_${document.getElementById("children-select").value}${suffix}`;
     }
     if (type === "workstatus") {
-      return `rank_retired_flow_${document.getElementByID("workstatus-select").value}${suffix}`;
+      return `rank_retired_flow_${document.getElementById("workstatus-select").value}${suffix}`;
     }
     if (type === "tenure") {
-      return `rank_tenure_${document.getElementByID("tenure-select").value}${suffix}`;
+      return `rank_tenure_${document.getElementById("tenure-select").value}${suffix}`;
     }
     
     return `rank_total_flowPER${suffix}`;
