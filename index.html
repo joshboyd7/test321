@@ -306,7 +306,7 @@
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
   // Get references to all option blocks
-  const neighborhoodOptions = document.getElementById('neighborhood-options');
+
   const countyOptions = document.getElementById('county-options');
   const metroOptions  = document.getElementById('metro-options');
 
@@ -316,9 +316,7 @@
     countyOptions.classList.add('hidden');
     metroOptions.classList.add('hidden');
 
-    if (selected === 'neighborhood') {
-      neighborhoodOptions.classList.remove('hidden');
-    } else if (selected === 'county') {
+    if (selected === 'county') {
       countyOptions.classList.remove('hidden');
     } else if (selected === 'metro') {
       metroOptions.classList.remove('hidden');
