@@ -258,7 +258,7 @@ function setupEventListeners() {
   });
 
   const download = document.getElementById("download");
-  if (download) {
+    if (download) {
     download.addEventListener("click", () => {
       const geography = document.querySelector('input[name="geography"]:checked')?.value;
       let path = null;
@@ -287,15 +287,15 @@ function setupEventListeners() {
       anchor.download = csvPath.split("/").pop();
       anchor.click();
     });
-  }
+  } 
 
-
-
+// Moved back outside the download block
 document.addEventListener("DOMContentLoaded", () => {
   setupEventListeners();     // wire up your “geography” & “filter” controls
   updateFilterVisibility();  // show the right controls for the default radio
   refreshMap();              // draw that first layer
 });
+
 
 
 
