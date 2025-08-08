@@ -38,17 +38,6 @@
     <label class="toggle-label"><input type="radio" name="geography" value="neighborhood" /> <span>Neighborhood</span></label><br />   
 
 
-
-    <!-- Neighborhood level controls-->
-    <div id="neighborhood-options">
-      <h2>Choose city</h2>
-      <select id="city-select" name="city">
-        <option value="Chicago" selected>Chicago</option>
-        <option value="Boston">Boston</option>        
-      </select>
-    </div>
-
-
     <!-- County-level controls -->
     <div id="county-options">
       <h2>Choose year</h2>
@@ -110,13 +99,15 @@
         <option value="age">Age Group</option>
         <option value="education">Education</option>
         <option value="industry">Industry (1-digit NAICS)</option>
+        <option value="children">Children</option>
+        <option value="tenure">Housing Tenure</option>
+        <option value="workstatus">Work Status</option>
       </select>
     </label>
 
   <!-- ACS Year selector -->
   <label id="acs-year-wrapper">Year
     <select id="acs-year-select">
-      <option value="All" selected>All (2005-2023)</option>      
       <option value="2019">2019-2023</option>
       <option value="2018">2018-2022</option>
       <option value="2017">2017-2021</option>
@@ -220,6 +211,33 @@
       </select>
     </label>
   </div>
+  
+      <!-- children selector -->
+    <label id="children-wrapper" class="hidden">Children
+      <select id="children-select">
+        <option value="no_kids">No Children</option>
+        <option value="with_kids">With Any Children</option>
+        <option value="kids_u18">With Children Under 18</option>
+      </select>
+    </label>
+  
+        <!-- tenure selector -->
+    <label id="tenure-wrapper" class="hidden">Housing Tenure
+      <select id="tenure-select">
+        <option value="Owner">Owner</option>
+        <option value="Renter">Renter</option>
+        <option value="NA">Unknown</option>
+      </select>
+    </label>
+  
+        <!-- workstatus selector -->
+    <label id="workstatus-wrapper" class="hidden">Work Status
+      <select id="workstatus-select">
+        <option value="head50_no_work">Retired</option>
+        <option value="someone_working">Not Retired</option>
+      </select>
+    </label>
+  
 </div>
 
 

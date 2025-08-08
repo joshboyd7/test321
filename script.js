@@ -17,11 +17,10 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 
 const FILES = {
   county_irs: "data/irs_county_pagerank_combined.geojson",
-  axel_Chicago: "data/axel_Chicago.geojson",
-  axel_Boston: "data/axel_Boston.geojson",  
+  axel_national: "data/axel_national.geojson",
   metro_irs: "data/irs_pagerank_combined.geojson",
   metro_acs: "data/acs_pagerank_combined.geojson",
-  acs_rolling5: "data/acs_rolling5_pagerank.geojson"   // ✅ add this
+  acs_rolling5: "data/acs_rolling5_pagerank.geojson" 
 };
 
 
@@ -86,7 +85,16 @@ function getSelectedColumn() {
       const code = document.getElementById("industry-input").value;
       return `rank_industry_${code}${suffix}`;
     }
-
+    if (type === "children") {
+      return `rank_kids_flow_${document.getElementByID("children-select").value}${suffix}`;
+    }
+    if (type === "workstatus") {
+      return `rank_retired_flow_${document.getElementByID("workstatus-select").value}${suffix}`;
+    }
+    if (type === "tenure") {
+      return `rank_tenure_${document.getElementByID("tenure-select").value}${suffix}`;
+    }
+    
     return `rank_total_flowPER${suffix}`;
   }
 
@@ -103,10 +111,9 @@ function loadLayer(column, geography) {
     labelField = "NAMELSAD";
     sourceName = "IRS county-level migration counts, 1991-2022";
   } else if (geography === "neighborhood") {
-    const city = document.getElementById("city-select").value;
-    url        = "/test321/" + (city === "Chicago" ? FILES.axel_Chicago : FILES.axel_Boston);
-    labelField = "district_id";
-    sourceName = "DataAxel neighborhood migration data, 2019-2023";
+  url = "/test321/" + FILES.axel_national;
+  labelField = "district_id";  // or "name" if you added a label column
+  sourceName = "DataAxel neighborhood migration data, 2019–2023 (National)";
   } else {
     const source = document.querySelector('input[name="metro-source"]:checked')?.value;
     const acsYear = document.getElementById("acs-year-select")?.value;
@@ -198,8 +205,12 @@ function updateFilterVisibility() {
     age: document.getElementById("age-wrapper"),
     education: document.getElementById("educ-wrapper"),
     industry: document.getElementById("industry-wrapper"),
+    children: document.getElementById("children-wrapper"),
+    tenure: document.getElementById("tenure-wrapper"),
+    workstatus: document.getElementById("workstatus-wrapper"),
     year: document.getElementById("yeartwo-wrapper")
   };
+
   Object.keys(wrappers).forEach(key => {
     if (wrappers[key]) {
       wrappers[key].classList.toggle("hidden", key !== val);
@@ -224,10 +235,21 @@ function setupEventListeners() {
     refreshMap();
   });
 
-  ["race-select", "age-select", "educ-select", "year-select", "yeartwo-select", "acs-year-select"].forEach(id => {
+    [
+    "race-select",
+    "age-select",
+    "educ-select",
+    "year-select",
+    "yeartwo-select",
+    "acs-year-select",
+    "children-select",
+    "tenure-select",
+    "workstatus-select"
+  ].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener("change", refreshMap);
   });
+
 
   const ind = document.getElementById("industry-input");
   if (ind) ind.addEventListener("change", refreshMap);
@@ -246,10 +268,7 @@ function setupEventListeners() {
       let path = null;
 
       if (geography === "neighborhood") {
-        const city = document.getElementById("city-select").value;
-        path = (city === "Chicago") ? FILES.axel_Chicago
-             : (city === "Boston")  ? FILES.axel_Boston
-             : null;
+        path = FILES.axel_national;
       } else if (geography === "county") {
         path = FILES.county_irs;
       } else {
@@ -276,40 +295,7 @@ function setupEventListeners() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  setupEventListeners();
-  updateFilterVisibility();
-  refreshMap();
 
-  const cityBounds = {
-    Chicago: [[41.20, -88.40], [42.40, -87.00]],
-    Boston:  [[41.80, -71.70], [42.70, -70.60]]
-  };
-
-  const citySelect = document.getElementById("city-select");
-  const geographyRadios = document.querySelectorAll('input[name="geography"]');
-
-  if (citySelect) {
-    citySelect.addEventListener("change", () => {
-      const city = citySelect.value;
-      if (cityBounds[city]) {
-        map.fitBounds(cityBounds[city]);
-      }
-      refreshMap();
-    });
-  }
-
-  geographyRadios.forEach(radio => {
-    radio.addEventListener("change", () => {
-      if (radio.checked && radio.value === "neighborhood") {
-        const city = citySelect?.value;
-        if (cityBounds[city]) {
-          map.fitBounds(cityBounds[city]);
-        }
-      }
-    });
-  });
-});
 
 
 
