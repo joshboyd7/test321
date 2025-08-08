@@ -106,11 +106,11 @@ function loadLayer(column, geography) {
   let url, labelField, sourceName;
 
   if (geography === "county") {
-    url        = "/test321/" + FILES.county_irs;
+    url        = "/" + FILES.county_irs;
     labelField = "NAMELSAD";
     sourceName = "IRS county-level migration counts, 1991-2022";
   } else if (geography === "neighborhood") {
-  url = "/test321/" + FILES.axel_national;
+  url = "/" + FILES.axel_national;
   labelField = "district_id";  // or "name" if you added a label column
   sourceName = "DataAxel neighborhood migration data, 2019–2023 (National)";
   } else {
@@ -119,13 +119,13 @@ function loadLayer(column, geography) {
     const useRolling = source === "acs" && acsYear && acsYear !== "All";
   
     if (source === "irs") {
-      url = "/test321/" + FILES.metro_irs;
+      url = "/" + FILES.metro_irs;
       sourceName = "IRS migration counts, 1991-2022, aggregated to the metro level";
     } else if (useRolling) {
-      url = "/test321/" + FILES.acs_rolling5;
+      url = "/" + FILES.acs_rolling5;
       sourceName = `ACS microdata, 2005-2023`;
     } else {
-      url = "/test321/" + FILES.metro_acs;
+      url = "/" + FILES.metro_acs;
       sourceName = "ACS microdata, 2005–2023";
     }
   
