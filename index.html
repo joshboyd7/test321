@@ -39,7 +39,7 @@
 
 
     <!-- County-level controls -->
-    <div id="county-options">
+    <div id="county-options" class ="hidden">
       <h2>Choose year</h2>
       <select id="year-select" name="year">
       <option value="2021" selected>2021</option>
@@ -79,7 +79,7 @@
 
     <!-- Metro-level controls -->
 <!-- Metro-level controls -->
-<div id="metro-options" class="hidden">
+<div id="metro-options">
   <h2>Choose sample</h2>
 
   <!-- ACS vs IRS toggle -->
@@ -255,7 +255,8 @@
   letter-spacing: normal;
   margin-top: 0.75em;
 ">
-  Data source: <span id="source-text">IRS county-level migration counts, 1991–2022</span>
+  <!--Data source: <span id="source-text">IRS county-level migration counts, 1991–2022</span>-->
+  Data source: <span id="source-text">IRS migration counts, 1991–2022, aggregated to the metro level</span>
 </div>
 
 
